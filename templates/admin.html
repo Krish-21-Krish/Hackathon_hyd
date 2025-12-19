@@ -24,14 +24,19 @@ body {
     z-index: 0;
 }
 
-#lightning {
+#lightning-core {
     fill: none;
     stroke: #38ef7d;
-    stroke-width: 2.5;
+    stroke-width: 3;
     stroke-linecap: round;
     stroke-linejoin: round;
-    filter: drop-shadow(0 0 10px rgba(56,239,125,0.9));
-    opacity: 0;
+}
+
+#lightning-glow {
+    fill: none;
+    stroke: rgba(56,239,125,0.6);
+    stroke-width: 10;
+    filter: blur(6px);
 }
 
 /* CONTAINER */
@@ -160,8 +165,9 @@ button {
 <body>
 
 <!-- LIGHTNING -->
-<svg id="lightning-layer">
-    <polyline id="lightning"></polyline>
+<svg id="lightning-layer" width="100%" height="100%" viewBox="0 0 100vw 100vh" preserveAspectRatio="none">
+    <polyline id="lightning-core"></polyline>
+    <polyline id="lightning-glow"></polyline>
 </svg>
 
 <div class="container">
@@ -231,7 +237,7 @@ button {
 
 </div>
 
-<!-- ORIGINAL SCRIPT (UNCHANGED LOGIC) -->
+<!-- ORIGINAL SCRIPT (UNCHANGED) -->
 <script>
 const API_URL = 'http://localhost:5000/api';
 
@@ -251,7 +257,7 @@ async function addClass() {
         class_name: class_name.value,
         department: department.value
     };
-    const r = await fetch(`${API_URL}/classes`, {
+    await fetch(`${API_URL}/classes`, {
         method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
     });
     class_result.innerHTML = `<div class="success">Done</div>`;
@@ -261,7 +267,10 @@ async function addClass() {
 async function loadClasses() {
     const r = await fetch(`${API_URL}/classes`);
     const d = await r.json();
-    classes_list.innerHTML = `<table class="students-table">${d.map(c=>`<tr><td>${c.class_id}</td><td>${c.class_name}</td><td>${c.department}</td></tr>`).join('')}</table>`;
+    classes_list.innerHTML =
+        `<table class="students-table">
+        ${d.map(c=>`<tr><td>${c.class_id}</td><td>${c.class_name}</td><td>${c.department}</td></tr>`).join('')}
+        </table>`;
 }
 
 async function loadClassesDropdown() {
@@ -294,13 +303,19 @@ async function uploadCSV() {
 
 function downloadSample() {
     const b = new Blob(["reg_no,student_name,class_id"],{type:'text/csv'});
-    const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='sample.csv';a.click();
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(b);
+    a.download='sample.csv';
+    a.click();
 }
 
 async function loadStudents() {
     const r = await fetch(`${API_URL}/students`);
     const d = await r.json();
-    students_table.innerHTML = `<table class="students-table">${d.map(s=>`<tr><td>${s.reg_no}</td><td>${s.student_name}</td><td>${s.class_id}</td></tr>`).join('')}</table>`;
+    students_table.innerHTML =
+        `<table class="students-table">
+        ${d.map(s=>`<tr><td>${s.reg_no}</td><td>${s.student_name}</td><td>${s.class_id}</td></tr>`).join('')}
+        </table>`;
 }
 
 async function loadStats() {
@@ -314,21 +329,44 @@ loadClasses();
 loadClassesDropdown();
 </script>
 
-<!-- GSAP -->
+<!-- GSAP + UPDATED LIGHTNING -->
 <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
 <script>
 gsap.from(".container",{y:30,opacity:0,duration:0.6});
 
-const lightning=document.getElementById("lightning");
-window.addEventListener("mousemove",e=>{
-    let p=[],x=e.clientX,y=e.clientY;
-    for(let i=0;i<8;i++){x+=(Math.random()-0.5)*30;y+=(Math.random()-0.5)*30;p.push(`${x},${y}`);}
-    lightning.setAttribute("points",p.join(" "));
-    gsap.fromTo(lightning,{opacity:1},{opacity:0,duration:0.35});
+const core = document.getElementById("lightning-core");
+const glow = document.getElementById("lightning-glow");
+
+function generateLightning(x, y) {
+    let points = [];
+    let segments = 14;
+    let length = 500;
+    let angle = Math.random() * Math.PI * 2;
+    let cx = x, cy = y;
+    points.push(`${cx},${cy}`);
+
+    for (let i = 0; i < segments; i++) {
+        cx += Math.cos(angle) * (length / segments);
+        cy += Math.sin(angle) * (length / segments);
+        cx += (Math.random() - 0.5) * 80;
+        cy += (Math.random() - 0.5) * 80;
+        points.push(`${cx},${cy}`);
+    }
+
+    const path = points.join(" ");
+    core.setAttribute("points", path);
+    glow.setAttribute("points", path);
+}
+
+window.addEventListener("mousemove", e => {
+    generateLightning(e.clientX, e.clientY);
+    gsap.killTweensOf([core, glow]);
+    gsap.fromTo([core, glow], {opacity:1}, {opacity:0, duration:0.5});
 });
 </script>
 
 </body>
 </html>
+
 
 
