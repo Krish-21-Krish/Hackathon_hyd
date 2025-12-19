@@ -1,0 +1,579 @@
+{% extends "base.html" %}
+{% block title %}Examiner Dashboard — Codex{% endblock %}
+
+{% block sidebar %}
+  <h3>Examiner Menu</h3>
+  <a href="{{ url_for('examiner_home') }}" class="active"><i class="fas fa-home"></i> <span>Overview</span></a>
+  <a href="{{ url_for('examiner_hall_allocation') }}"><i class="fas fa-door-open"></i> <span>Hall Allocation</span></a>
+{% endblock %}
+
+{% block content %}
+  <style>
+    /* DASHBOARD HEADER */
+    .dashboard-header {
+      background: linear-gradient(135deg, rgba(224, 251, 252, 0.15), rgba(224, 251, 252, 0.05));
+      padding: 32px;
+      border-radius: 20px;
+      margin-bottom: 32px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      animation: slideInDown 0.6s ease-out;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @keyframes slideInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .dashboard-header::before {
+      content: '📝';
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 4rem;
+      opacity: 0.1;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(5deg); }
+    }
+
+    .dashboard-header h2 {
+      margin: 0 0 16px 0;
+      color: #E0FBFC;
+      font-size: 2.2rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .dashboard-header h2::before {
+      content: '🎓';
+      font-size: 2.5rem;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+    }
+
+    .welcome-text {
+      color: #E0FBFC;
+      font-size: 1.2rem;
+      opacity: 0.95;
+      font-weight: 500;
+      margin: 0;
+    }
+
+    .user-name {
+      font-weight: 700;
+      color: #E0FBFC;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    /* QUICK STATS GRID */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, rgba(224, 251, 252, 0.15), rgba(224, 251, 252, 0.08));
+      padding: 28px;
+      border-radius: 18px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.2s; }
+    .stat-card:nth-child(3) { animation-delay: 0.3s; }
+    .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(224, 251, 252, 0.2) 0%, transparent 70%);
+      transition: all 0.5s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-10px) scale(1.03);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+      border-color: rgba(224, 251, 252, 0.5);
+    }
+
+    .stat-card:hover::before {
+      top: -25%;
+      right: -25%;
+      width: 250px;
+      height: 250px;
+    }
+
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      background: rgba(224, 251, 252, 0.2);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      margin-bottom: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover .stat-icon {
+      transform: scale(1.15) rotate(5deg);
+      background: rgba(224, 251, 252, 0.3);
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: #E0FBFC;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: #E0FBFC;
+      position: relative;
+      z-index: 1;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .stat-trend {
+      font-size: 0.85rem;
+      color: #E0FBFC;
+      opacity: 0.7;
+      margin-top: 8px;
+    }
+
+    /* QUICK ACTIONS */
+    .quick-actions {
+      background: rgba(224, 251, 252, 0.08);
+      padding: 28px;
+      border-radius: 18px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      margin-bottom: 32px;
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .quick-actions h3 {
+      color: #E0FBFC;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin: 0 0 20px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .quick-actions h3::before {
+      content: '⚡';
+      font-size: 1.6rem;
+    }
+
+    .actions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .action-card {
+      background: rgba(224, 251, 252, 0.1);
+      padding: 20px;
+      border-radius: 12px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+    }
+
+    .action-card:hover {
+      background: rgba(224, 251, 252, 0.2);
+      border-color: rgba(224, 251, 252, 0.4);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .action-icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .action-title {
+      color: #E0FBFC;
+      font-weight: 600;
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    /* UPCOMING SECTION */
+    .upcoming-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .section-card {
+      background: rgba(224, 251, 252, 0.08);
+      padding: 28px;
+      border-radius: 18px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      animation: fadeIn 1s ease-out;
+    }
+
+    .section-card h3 {
+      color: #E0FBFC;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin: 0 0 20px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-card h3::before {
+      font-size: 1.5rem;
+    }
+
+    .section-card.exams h3::before {
+      content: '📅';
+    }
+
+    .section-card.halls h3::before {
+      content: '🏛️';
+    }
+
+    .section-card.reports h3::before {
+      content: '📊';
+    }
+
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .empty-state-icon {
+      font-size: 3.5rem;
+      color: #E0FBFC;
+      opacity: 0.5;
+      margin-bottom: 16px;
+      display: inline-block;
+      animation: sway 3s ease-in-out infinite;
+    }
+
+    @keyframes sway {
+      0%, 100% { transform: rotate(-5deg); }
+      50% { transform: rotate(5deg); }
+    }
+
+    .empty-state-text {
+      color: #E0FBFC;
+      opacity: 0.8;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .empty-state-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: rgba(224, 251, 252, 0.15);
+      border: 2px solid rgba(224, 251, 252, 0.3);
+      border-radius: 10px;
+      color: #E0FBFC;
+      text-decoration: none;
+      font-weight: 600;
+      margin-top: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .empty-state-link:hover {
+      background: rgba(224, 251, 252, 0.25);
+      border-color: rgba(224, 251, 252, 0.5);
+      transform: translateY(-2px);
+    }
+
+    /* INFO BANNER */
+    .info-banner {
+      background: linear-gradient(135deg, rgba(224, 251, 252, 0.12), rgba(224, 251, 252, 0.06));
+      padding: 24px;
+      border-radius: 16px;
+      border: 2px solid rgba(224, 251, 252, 0.25);
+      margin-bottom: 32px;
+      animation: slideInRight 0.8s ease-out;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .info-banner::before {
+      content: '💡';
+      position: absolute;
+      top: 50%;
+      right: 20px;
+      transform: translateY(-50%);
+      font-size: 3rem;
+      opacity: 0.2;
+    }
+
+    .info-banner-content {
+      max-width: 85%;
+    }
+
+    .info-banner h4 {
+      color: #E0FBFC;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .info-banner p {
+      color: #E0FBFC;
+      opacity: 0.9;
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .upcoming-section {
+        grid-template-columns: 1fr;
+      }
+
+      .actions-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .dashboard-header h2 {
+        font-size: 1.8rem;
+      }
+
+      .info-banner-content {
+        max-width: 100%;
+      }
+
+      .info-banner::before {
+        display: none;
+      }
+    }
+  </style>
+
+  <div class="dashboard-header">
+    <h2>Examiner Dashboard</h2>
+    <p class="welcome-text">Welcome, <span class="user-name">{{ current_user.full_name or current_user.reg_no }}</span>! 👋</p>
+  </div>
+
+  <!-- Info Banner -->
+  <div class="info-banner">
+    <div class="info-banner-content">
+      <h4><i class="fas fa-info-circle"></i> Exam Management Hub</h4>
+      <p>Manage exam schedules, allocate halls, and generate seating arrangements. All your examination tools in one place.</p>
+    </div>
+  </div>
+
+  <!-- Quick Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">📝</div>
+      <div class="stat-label">Upcoming Exams</div>
+      <div class="stat-value">0</div>
+      <div class="stat-trend">No exams scheduled</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">🏛️</div>
+      <div class="stat-label">Hall Allocations</div>
+      <div class="stat-value">0</div>
+      <div class="stat-trend">Awaiting assignments</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">👥</div>
+      <div class="stat-label">Total Students</div>
+      <div class="stat-value">0</div>
+      <div class="stat-trend">Ready for seating</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">📊</div>
+      <div class="stat-label">Reports Generated</div>
+      <div class="stat-value">0</div>
+      <div class="stat-trend">This semester</div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <h3>Quick Actions</h3>
+    <div class="actions-grid">
+      <a href="{{ url_for('examiner_hall_allocation') }}" class="action-card">
+        <div class="action-icon">🚪</div>
+        <div class="action-title">Hall Allocation</div>
+      </a>
+      <div class="action-card">
+        <div class="action-icon">🗓️</div>
+        <div class="action-title">Schedule Exam</div>
+      </div>
+      <div class="action-card">
+        <div class="action-icon">💺</div>
+        <div class="action-title">Seating Plan</div>
+      </div>
+      <div class="action-card">
+        <div class="action-icon">📄</div>
+        <div class="action-title">Generate Report</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upcoming Sections -->
+  <div class="upcoming-section">
+    <div class="section-card exams">
+      <h3>Upcoming Exams</h3>
+      <div class="empty-state">
+        <div class="empty-state-icon">📚</div>
+        <p class="empty-state-text">No upcoming exams scheduled yet. Exam details will appear here once they are added to the system.</p>
+      </div>
+    </div>
+
+    <div class="section-card halls">
+      <h3>Hall Allotments</h3>
+      <div class="empty-state">
+        <div class="empty-state-icon">🏛️</div>
+        <p class="empty-state-text">Hall allocation information will be displayed here when exams are scheduled.</p>
+        <a href="{{ url_for('examiner_hall_allocation') }}" class="empty-state-link">
+          <i class="fas fa-arrow-right"></i> Manage Halls
+        </a>
+      </div>
+    </div>
+
+    <div class="section-card reports">
+      <h3>Recent Reports</h3>
+      <div class="empty-state">
+        <div class="empty-state-icon">📈</div>
+        <p class="empty-state-text">Generated reports and exam analytics will show here for easy access and review.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Animate stat values on load
+    document.addEventListener('DOMContentLoaded', function() {
+      const statCards = document.querySelectorAll('.stat-card');
+      
+      // Stagger animation
+      statCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+      });
+
+      // Add sparkle effect on hover
+      statCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+          const sparkle = document.createElement('div');
+          sparkle.style.position = 'absolute';
+          sparkle.style.top = Math.random() * 100 + '%';
+          sparkle.style.left = Math.random() * 100 + '%';
+          sparkle.style.width = '4px';
+          sparkle.style.height = '4px';
+          sparkle.style.background = '#E0FBFC';
+          sparkle.style.borderRadius = '50%';
+          sparkle.style.animation = 'sparkle 1s ease-out forwards';
+          sparkle.style.pointerEvents = 'none';
+          sparkle.style.zIndex = '10';
+          this.appendChild(sparkle);
+          
+          setTimeout(() => sparkle.remove(), 1000);
+        });
+      });
+
+      // Pulse effect for action cards
+      const actionCards = document.querySelectorAll('.action-card');
+      actionCards.forEach((card, index) => {
+        setTimeout(() => {
+          card.style.animation = 'cardPulse 0.5s ease-out';
+        }, 1000 + (index * 100));
+      });
+    });
+
+    // Add CSS for sparkle animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes sparkle {
+        0% { opacity: 0; transform: scale(0); }
+        50% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(0); }
+      }
+      @keyframes cardPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+{% endblock %}

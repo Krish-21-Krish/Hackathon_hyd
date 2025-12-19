@@ -1,0 +1,814 @@
+{% extends "base.html" %}
+{% block title %}Hall Allocation — Codex{% endblock %}
+
+{% block sidebar %}
+  <h3>Examiner Menu</h3>
+  <a href="{{ url_for('examiner_home') }}"><i class="fas fa-home"></i> <span>Overview</span></a>
+  <a href="{{ url_for('examiner_hall_allocation') }}" class="active"><i class="fas fa-door-open"></i> <span>Hall Allocation</span></a>
+{% endblock %}
+
+{% block content %}
+  <style>
+    /* PAGE HEADER */
+    .page-header {
+      background: linear-gradient(135deg, rgba(224, 251, 252, 0.15), rgba(224, 251, 252, 0.05));
+      padding: 32px;
+      border-radius: 20px;
+      margin-bottom: 32px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      animation: slideInDown 0.6s ease-out;
+    }
+
+    @keyframes slideInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .page-header h2 {
+      margin: 0 0 12px 0;
+      color: #E0FBFC;
+      font-size: 2.2rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .page-header h2::before {
+      content: '🎯';
+      font-size: 2.5rem;
+      animation: rotate 20s linear infinite;
+    }
+
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .page-header p {
+      margin: 0;
+      color: #E0FBFC;
+      opacity: 0.9;
+      font-size: 1.05rem;
+    }
+
+    /* FLASH MESSAGES */
+    .flash-messages {
+      margin-bottom: 24px;
+    }
+
+    .flash-message {
+      padding: 16px 20px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 500;
+      animation: slideInRight 0.5s ease-out;
+      border: 2px solid;
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .flash-message.success {
+      background: rgba(34, 197, 94, 0.15);
+      border-color: rgba(34, 197, 94, 0.4);
+      color: #E0FBFC;
+    }
+
+    .flash-message.danger {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #E0FBFC;
+    }
+
+    .flash-message i {
+      font-size: 1.3rem;
+    }
+
+    /* PROGRESS TRACKER */
+    .progress-tracker {
+      background: rgba(224, 251, 252, 0.08);
+      padding: 32px;
+      border-radius: 20px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      margin-bottom: 32px;
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .progress-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      position: relative;
+    }
+
+    .progress-step {
+      text-align: center;
+      position: relative;
+    }
+
+    .step-circle {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(224, 251, 252, 0.1);
+      border: 3px solid rgba(224, 251, 252, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #E0FBFC;
+      transition: all 0.4s ease;
+    }
+
+    .progress-step.completed .step-circle {
+      background: rgba(34, 197, 94, 0.2);
+      border-color: rgba(34, 197, 94, 0.6);
+      animation: checkPulse 0.6s ease-out;
+    }
+
+    @keyframes checkPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+    }
+
+    .progress-step.completed .step-circle::before {
+      content: '✓';
+      font-size: 2rem;
+    }
+
+    .step-label {
+      color: #E0FBFC;
+      font-size: 0.9rem;
+      font-weight: 600;
+      opacity: 0.7;
+    }
+
+    .progress-step.completed .step-label {
+      opacity: 1;
+    }
+
+    /* STEP CARD */
+    .step-card {
+      background: rgba(224, 251, 252, 0.08);
+      padding: 32px;
+      border-radius: 20px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      margin-bottom: 24px;
+      animation: fadeInUp 0.6s ease-out;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .step-card:nth-child(1) { animation-delay: 0.1s; }
+    .step-card:nth-child(2) { animation-delay: 0.2s; }
+    .step-card:nth-child(3) { animation-delay: 0.3s; }
+    .step-card:nth-child(4) { animation-delay: 0.4s; }
+
+    .step-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(224, 251, 252, 0.1) 0%, transparent 70%);
+      animation: rotate 20s linear infinite;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .step-number {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(224, 251, 252, 0.2);
+      border: 2px solid rgba(224, 251, 252, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: #E0FBFC;
+      flex-shrink: 0;
+    }
+
+    .step-card h3 {
+      margin: 0;
+      color: #E0FBFC;
+      font-size: 1.4rem;
+      font-weight: 700;
+      flex: 1;
+    }
+
+    .step-description {
+      color: #E0FBFC;
+      opacity: 0.9;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      padding: 12px 16px;
+      background: rgba(224, 251, 252, 0.05);
+      border-radius: 10px;
+      border-left: 4px solid rgba(224, 251, 252, 0.3);
+    }
+
+    .step-description code {
+      background: rgba(224, 251, 252, 0.2);
+      padding: 2px 8px;
+      border-radius: 4px;
+      color: #E0FBFC;
+      font-family: 'Courier New', monospace;
+      font-weight: 600;
+    }
+
+    /* FILE INPUT WRAPPER */
+    .file-input-wrapper {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .file-input-container {
+      position: relative;
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .file-input-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 20px;
+      background: rgba(255, 255, 255, 0.95);
+      border: 2px solid rgba(224, 251, 252, 0.3);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: #06070E;
+      font-weight: 600;
+    }
+
+    .file-input-label:hover {
+      background: #ffffff;
+      border-color: #E0FBFC;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(224, 251, 252, 0.2);
+    }
+
+    .file-input-label i {
+      font-size: 1.2rem;
+      color: #29524A;
+    }
+
+    .file-name-display {
+      flex: 1;
+      color: #E0FBFC;
+    }
+
+    input[type="file"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    /* SUBMIT BUTTON */
+    .submit-btn {
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #E0FBFC 0%, #b8e9eb 100%);
+      border: none;
+      border-radius: 12px;
+      color: #06070E;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 16px rgba(224, 251, 252, 0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .submit-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    .submit-btn:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(224, 251, 252, 0.5);
+      background: linear-gradient(135deg, #ffffff 0%, #E0FBFC 100%);
+    }
+
+    .submit-btn i,
+    .submit-btn span {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* PREVIEW BOX */
+    .preview-box {
+      background: rgba(255, 255, 255, 0.95);
+      border: 2px solid rgba(224, 251, 252, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      max-height: 320px;
+      overflow: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      color: #06070E;
+      margin-top: 16px;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .preview-box::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .preview-box::-webkit-scrollbar-track {
+      background: rgba(224, 251, 252, 0.1);
+    }
+
+    .preview-box::-webkit-scrollbar-thumb {
+      background: rgba(41, 82, 74, 0.3);
+      border-radius: 4px;
+    }
+
+    /* GENERATE SECTION */
+    .generate-section {
+      background: linear-gradient(135deg, rgba(224, 251, 252, 0.15), rgba(224, 251, 252, 0.08));
+      padding: 40px;
+      border-radius: 20px;
+      border: 2px solid rgba(224, 251, 252, 0.3);
+      text-align: center;
+      animation: fadeIn 1s ease-out;
+    }
+
+    .generate-section h3 {
+      color: #E0FBFC;
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .generate-section h3::before {
+      content: '⚡';
+      font-size: 2rem;
+    }
+
+    .generate-btn {
+      padding: 18px 48px;
+      background: linear-gradient(135deg, #E0FBFC 0%, #b8e9eb 100%);
+      border: none;
+      border-radius: 14px;
+      color: #06070E;
+      font-weight: 800;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 24px rgba(224, 251, 252, 0.4);
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .generate-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    .generate-btn:hover::before {
+      width: 400px;
+      height: 400px;
+    }
+
+    .generate-btn:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 36px rgba(224, 251, 252, 0.6);
+      background: linear-gradient(135deg, #ffffff 0%, #E0FBFC 100%);
+    }
+
+    .generate-btn i,
+    .generate-btn span {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* FILES LIST */
+    .files-section {
+      background: rgba(224, 251, 252, 0.08);
+      padding: 28px;
+      border-radius: 18px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      margin-top: 32px;
+      animation: fadeIn 1.2s ease-out;
+    }
+
+    .files-section h3 {
+      color: #E0FBFC;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin: 0 0 20px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .files-section h3::before {
+      content: '📁';
+      font-size: 1.6rem;
+    }
+
+    .files-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .file-item {
+      padding: 14px 18px;
+      background: rgba(224, 251, 252, 0.1);
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      border-radius: 10px;
+      margin-bottom: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .file-item:hover {
+      background: rgba(224, 251, 252, 0.2);
+      border-color: rgba(224, 251, 252, 0.4);
+      transform: translateX(8px);
+    }
+
+    .file-item a {
+      color: #E0FBFC;
+      text-decoration: none;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .file-item a i {
+      font-size: 1.2rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #E0FBFC;
+      opacity: 0.7;
+    }
+
+    /* SUMMARY SECTION */
+    .summary-section {
+      background: rgba(224, 251, 252, 0.08);
+      padding: 28px;
+      border-radius: 18px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      margin-top: 24px;
+    }
+
+    .summary-section h4 {
+      color: #E0FBFC;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .summary-section h4::before {
+      content: '📊';
+      font-size: 1.4rem;
+    }
+
+    .summary-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .summary-item {
+      padding: 12px 16px;
+      background: rgba(224, 251, 252, 0.1);
+      border-left: 4px solid rgba(224, 251, 252, 0.4);
+      border-radius: 8px;
+      color: #E0FBFC;
+      font-weight: 500;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .file-input-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .file-input-container {
+        min-width: 100%;
+      }
+
+      .progress-steps {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .page-header h2 {
+        font-size: 1.8rem;
+      }
+    }
+  </style>
+
+  <div class="page-header">
+    <h2>Exam Seating Allocator</h2>
+    <p>Upload student data, configure halls, and generate automated seating arrangements</p>
+  </div>
+
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for cat, m in messages %}
+          <div class="flash-message {{ cat }}">
+            <i class="fas fa-{{ 'check-circle' if cat != 'danger' else 'exclamation-triangle' }}"></i>
+            <span>{{ m }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Progress Tracker -->
+  <div class="progress-tracker">
+    <div class="progress-steps">
+      <div class="progress-step completed">
+        <div class="step-circle">1</div>
+        <div class="step-label">Upload Students</div>
+      </div>
+      <div class="progress-step">
+        <div class="step-circle">2</div>
+        <div class="step-label">Class Limits</div>
+      </div>
+      <div class="progress-step">
+        <div class="step-circle">3</div>
+        <div class="step-label">Hall Config</div>
+      </div>
+      <div class="progress-step">
+        <div class="step-circle">4</div>
+        <div class="step-label">Generate</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 1: Upload Students -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-number">1</div>
+      <h3>Upload Student List</h3>
+    </div>
+    <div class="step-description">
+      CSV columns: <code>Class,RegNo</code> (example: <code>CSE3A,21CS001</code>). One row per student.
+    </div>
+    <form method="post" enctype="multipart/form-data" action="{{ url_for('examiner_hall_upload_students') }}" id="studentsForm">
+      <div class="file-input-wrapper">
+        <div class="file-input-container">
+          <label for="studentsFile" class="file-input-label">
+            <i class="fas fa-file-csv"></i>
+            <span class="file-name-display" id="studentsFileName">Choose CSV file...</span>
+          </label>
+          <input type="file" name="students_csv" id="studentsFile" accept=".csv" required>
+        </div>
+        <button type="submit" class="submit-btn">
+          <i class="fas fa-upload"></i>
+          <span>Upload Students</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Step 2: Upload Class Limits -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-number">2</div>
+      <h3>Upload Class Bench Limits</h3>
+    </div>
+    <div class="step-description">
+      CSV columns: <code>Class,Allocated_Benches</code> (example: <code>CSE3A,10</code>). Maximum benches per class.
+    </div>
+    <form method="post" enctype="multipart/form-data" action="{{ url_for('examiner_hall_upload_classes') }}" id="classesForm">
+      <div class="file-input-wrapper">
+        <div class="file-input-container">
+          <label for="classesFile" class="file-input-label">
+            <i class="fas fa-file-csv"></i>
+            <span class="file-name-display" id="classesFileName">Choose CSV file...</span>
+          </label>
+          <input type="file" name="classes_config" id="classesFile" accept=".csv" required>
+        </div>
+        <button type="submit" class="submit-btn">
+          <i class="fas fa-upload"></i>
+          <span>Upload Class Limits</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Step 3: Upload Halls -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-number">3</div>
+      <h3>Upload Hall Capacities</h3>
+    </div>
+    <div class="step-description">
+      CSV columns: <code>Hall_Name,Seats_Per_Bench,Allocated_Benches</code> (example: <code>MainHall,2,30</code>).
+    </div>
+    <form method="post" enctype="multipart/form-data" action="{{ url_for('examiner_hall_upload_halls') }}" id="hallsForm">
+      <div class="file-input-wrapper">
+        <div class="file-input-container">
+          <label for="hallsFile" class="file-input-label">
+            <i class="fas fa-file-csv"></i>
+            <span class="file-name-display" id="hallsFileName">Choose CSV file...</span>
+          </label>
+          <input type="file" name="hall_config" id="hallsFile" accept=".csv" required>
+        </div>
+        <button type="submit" class="submit-btn">
+          <i class="fas fa-upload"></i>
+          <span>Upload Hall List</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Current Student File Preview -->
+  <div class="step-card">
+    <div class="step-header">
+      <h3><i class="fas fa-eye"></i> Current Student File Preview</h3>
+    </div>
+    <pre class="preview-box">{{ preview }}</pre>
+  </div>
+
+  <!-- Step 4: Generate Seating -->
+  <div class="generate-section">
+    <h3>Generate Seating Plan</h3>
+    <p style="color: #E0FBFC; opacity: 0.9; max-width: 600px; margin: 0 auto 0;">
+      Uses the uploaded student list, class limits, and hall capacities to create an automated seating arrangement.
+    </p>
+    <form method="post" action="{{ url_for('examiner_hall_generate') }}">
+      <button type="submit" class="generate-btn">
+        <i class="fas fa-magic"></i>
+        <span>Generate Seating Automatically</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- Generated Files -->
+  <div class="files-section">
+    <h3>Generated Seating Files</h3>
+    <ul class="files-list">
+      {% for f in files %}
+        <li class="file-item">
+          <a href="{{ url_for('examiner_hall_download', filename=f) }}">
+            <i class="fas fa-download"></i>
+            <span>{{ f }}</span>
+          </a>
+        </li>
+      {% else %}
+        <li class="empty-state">
+          <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 12px; display: block;"></i>
+          No seating files generated yet
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <!-- Latest Generated File -->
+  {% if generated_filename %}
+    <div class="summary-section">
+      <h4>Latest Generated File</h4>
+      <div class="file-item">
+        <a href="{{ url_for('examiner_hall_download', filename=generated_filename) }}">
+          <i class="fas fa-file-download"></i>
+          <span>Download {{ generated_filename }}</span>
+        </a>
+      </div>
+
+      {% if mapping %}
+        <h4 style="margin-top: 24px;">Bench Allocation Summary</h4>
+        <ul class="summary-list">
+          {% for cls, s, e in mapping %}
+            <li class="summary-item">{{ cls }}: benches {{ s }} – {{ e }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      <h4 style="margin-top: 24px;">File Preview (first 200 lines)</h4>
+      <pre class="preview-box" style="max-height: 400px;">{{ preview_generated }}</pre>
+    </div>
+  {% endif %}
+
+  <script>
+    // File input display
+    document.getElementById('studentsFile').addEventListener('change', function(e) {
+      const fileName = e.target.files[0] ? e.target.files[0].name : 'Choose CSV file...';
+      document.getElementById('studentsFileName').textContent = fileName;
+    });
+
+    document.getElementById('classesFile').addEventListener('change', function(e) {
+      const fileName = e.target.files[0] ? e.target.files[0].name : 'Choose CSV file...';
+      document.getElementById('classesFileName').textContent = fileName;
+    });
+
+    document.getElementById('hallsFile').addEventListener('change', function(e) {
+      const fileName = e.target.files[0] ? e.target.files[0].name : 'Choose CSV file...';
+      document.getElementById('hallsFileName').textContent = fileName;
+    });
+
+    // Animate step cards on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.step-card').forEach(card => {
+      observer.observe(card);
+    });
+  </script>
+{% endblock %}
