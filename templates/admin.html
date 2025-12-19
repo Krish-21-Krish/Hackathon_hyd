@@ -8,67 +8,53 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* BODY */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f4fdf9;
+    background: #ffffff;
     min-height: 100vh;
     padding: 20px;
 }
 
-/* ===== Cursor Lightning Effect ===== */
-.zap-layer {
+/* LIGHTNING SVG */
+#lightning-layer {
     position: fixed;
     inset: 0;
     pointer-events: none;
     z-index: 0;
 }
 
-.zap {
-    position: absolute;
-    width: 160px;
-    height: 160px;
-    border-radius: 50%;
-    background: radial-gradient(
-        circle,
-        rgba(56,239,125,0.95) 0%,
-        rgba(56,239,125,0.5) 30%,
-        rgba(56,239,125,0.2) 50%,
-        transparent 70%
-    );
-    filter: blur(20px);
-    transform: translate(-50%, -50%);
+#lightning {
+    fill: none;
+    stroke: #38ef7d;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 10px rgba(56,239,125,0.9));
+    opacity: 0;
 }
 
-/* ===== Main Container ===== */
+/* CONTAINER */
 .container {
     position: relative;
     z-index: 1;
     max-width: 1200px;
     margin: 0 auto;
-    background: white;
+    background: #f4fdf9;
     padding: 30px;
     border-radius: 14px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.12);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
 }
 
-h1 {
-    color: #11998e;
-    margin-bottom: 10px;
-    font-size: 32px;
-}
+h1 { color: #11998e; font-size: 32px; margin-bottom: 10px; }
+.subtitle { color: #666; margin-bottom: 30px; font-size: 14px; }
 
-.subtitle {
-    color: #666;
-    margin-bottom: 30px;
-    font-size: 14px;
-}
-
-/* ===== Tabs ===== */
+/* TABS */
 .tabs {
     display: flex;
     gap: 10px;
     margin-bottom: 30px;
-    border-bottom: 2px solid #e0f2ea;
+    border-bottom: 2px solid #dff3ec;
 }
 
 .tab {
@@ -90,38 +76,30 @@ h1 {
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
-/* ===== Sections ===== */
+/* SECTIONS */
 .section {
-    background: #f3fdf9;
+    background: white;
     padding: 25px;
     border-radius: 10px;
     margin-bottom: 20px;
+    border-left: 4px solid #11998e;
 }
 
-h2 {
-    margin-bottom: 20px;
-    color: #333;
-}
+label { font-weight: 600; margin-bottom: 8px; display: block; }
 
-label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-}
-
-input, select, textarea {
+input, select {
     width: 100%;
     padding: 12px;
     border: 2px solid #dff3ec;
     border-radius: 6px;
-    font-size: 14px;
 }
 
-input:focus, select:focus, textarea:focus {
+input:focus, select:focus {
     outline: none;
     border-color: #11998e;
 }
 
+/* BUTTONS */
 button {
     background: linear-gradient(135deg, #11998e, #38ef7d);
     color: white;
@@ -129,32 +107,17 @@ button {
     padding: 12px 28px;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 16px;
     font-weight: 600;
 }
 
-.btn-secondary {
-    background: #6c757d;
-}
+.btn-secondary { background: #6c757d; }
 
-.result {
-    margin-top: 20px;
-    padding: 15px;
-    border-radius: 6px;
-    font-weight: 500;
-}
+/* RESULT */
+.result { margin-top: 20px; padding: 15px; border-radius: 6px; }
+.success { background: #d4edda; color: #155724; }
+.error { background: #f8d7da; color: #721c24; }
 
-.success {
-    background: #d4edda;
-    color: #155724;
-}
-
-.error {
-    background: #f8d7da;
-    color: #721c24;
-}
-
-/* ===== Tables ===== */
+/* TABLE */
 .students-table {
     width: 100%;
     border-collapse: collapse;
@@ -164,41 +127,15 @@ button {
 .students-table th {
     background: #11998e;
     color: white;
-    padding: 14px;
-    text-align: left;
+    padding: 15px;
 }
 
 .students-table td {
-    padding: 12px;
+    padding: 12px 15px;
     border-bottom: 1px solid #e0e0e0;
 }
 
-.students-table tr:hover {
-    background: #f1fdf8;
-}
-
-/* ===== Bulk Upload ===== */
-.bulk-upload-area {
-    border: 3px dashed #11998e;
-    border-radius: 8px;
-    padding: 40px;
-    text-align: center;
-    background: #f3fdf9;
-}
-
-.file-input { display: none; }
-
-.upload-btn {
-    display: inline-block;
-    padding: 12px 28px;
-    background: #11998e;
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-}
-
-/* ===== Stats ===== */
+/* STATS */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -208,7 +145,7 @@ button {
 .stat-card {
     background: white;
     padding: 20px;
-    border-radius: 10px;
+    border-radius: 8px;
     border-left: 4px solid #11998e;
 }
 
@@ -217,128 +154,181 @@ button {
     font-weight: 700;
     color: #11998e;
 }
-
-.stat-label {
-    color: #666;
-    font-size: 14px;
-}
 </style>
 </head>
 
 <body>
 
-<!-- Cursor Zap -->
-<div class="zap-layer">
-    <div class="zap"></div>
-</div>
+<!-- LIGHTNING -->
+<svg id="lightning-layer">
+    <polyline id="lightning"></polyline>
+</svg>
 
 <div class="container">
-    <h1>🎓 Admin Panel - Student Management</h1>
-    <p class="subtitle">Manage classes, students, and bulk imports</p>
 
-    <div class="tabs">
-        <button class="tab active" onclick="switchTab('classes', event)">📚 Manage Classes</button>
-        <button class="tab" onclick="switchTab('students', event)">👨‍🎓 Add Students</button>
-        <button class="tab" onclick="switchTab('bulk', event)">📤 Bulk Upload</button>
-        <button class="tab" onclick="switchTab('view', event)">📋 View Students</button>
+<h1>🎓 Admin Panel - Student Management</h1>
+<p class="subtitle">Manage classes, students, and bulk imports</p>
+
+<div class="tabs">
+    <button class="tab active" onclick="switchTab('classes', event)">📚 Manage Classes</button>
+    <button class="tab" onclick="switchTab('students', event)">👨‍🎓 Add Students</button>
+    <button class="tab" onclick="switchTab('bulk', event)">📤 Bulk Upload</button>
+    <button class="tab" onclick="switchTab('view', event)">📋 View Students</button>
+</div>
+
+<!-- TAB 1 -->
+<div id="classes" class="tab-content active">
+    <div class="section">
+        <label>Class ID</label>
+        <input id="class_id">
+        <label>Class Name</label>
+        <input id="class_name">
+        <label>Department</label>
+        <input id="department">
+        <button onclick="addClass()">Add Class</button>
+        <div id="class_result"></div>
     </div>
-
-    <!-- ===== ORIGINAL HTML CONTENT (UNCHANGED) ===== -->
-
-    <!-- Tab 1 -->
-    <div id="classes" class="tab-content active">
-        <div class="section">
-            <h2>Add New Class</h2>
-            <label>Class ID</label>
-            <input type="number" id="class_id">
-            <label>Class Name</label>
-            <input type="text" id="class_name">
-            <label>Department</label>
-            <input type="text" id="department">
-            <button onclick="addClass()">Add Class</button>
-            <div id="class_result"></div>
-        </div>
-
-        <div class="section">
-            <h2>Existing Classes</h2>
-            <button onclick="loadClasses()" class="btn-secondary">Refresh</button>
-            <div id="classes_list"></div>
-        </div>
-    </div>
-
-    <!-- Tab 2 -->
-    <div id="students" class="tab-content">
-        <div class="section">
-            <h2>Add Student</h2>
-            <label>Reg No</label>
-            <input type="text" id="reg_no">
-            <label>Name</label>
-            <input type="text" id="student_name">
-            <label>Class</label>
-            <select id="student_class_id"></select>
-            <button onclick="addStudent()">Add Student</button>
-            <div id="student_result"></div>
-        </div>
-    </div>
-
-    <!-- Tab 3 -->
-    <div id="bulk" class="tab-content">
-        <div class="section">
-            <h2>Bulk Upload</h2>
-            <div class="bulk-upload-area">
-                <input type="file" id="csv_file" class="file-input" onchange="handleFileSelect()">
-                <label for="csv_file" class="upload-btn">Choose CSV</label>
-                <p id="file_name"></p>
-            </div>
-            <button onclick="uploadCSV()" style="width:100%">Upload</button>
-            <div id="bulk_result"></div>
-        </div>
-    </div>
-
-    <!-- Tab 4 -->
-    <div id="view" class="tab-content">
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-number" id="total_students">0</div>
-                <div class="stat-label">Students</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="total_classes">0</div>
-                <div class="stat-label">Classes</div>
-            </div>
-        </div>
-
-        <div class="section">
-            <label>Filter Class</label>
-            <select id="filter_class_id" onchange="loadStudents()"></select>
-            <button onclick="loadStudents()" class="btn-secondary">Refresh</button>
-            <div id="students_table"></div>
-        </div>
+    <div class="section">
+        <button class="btn-secondary" onclick="loadClasses()">Refresh</button>
+        <div id="classes_list"></div>
     </div>
 </div>
 
-<!-- ===== ORIGINAL JS (UNCHANGED) ===== -->
+<!-- TAB 2 -->
+<div id="students" class="tab-content">
+    <div class="section">
+        <input id="reg_no" placeholder="Reg No">
+        <input id="student_name" placeholder="Student Name">
+        <select id="student_class_id"></select>
+        <button onclick="addStudent()">Add Student</button>
+        <div id="student_result"></div>
+    </div>
+</div>
+
+<!-- TAB 3 -->
+<div id="bulk" class="tab-content">
+    <div class="section">
+        <input type="file" id="csv_file" onchange="handleFileSelect()">
+        <p id="file_name"></p>
+        <button onclick="uploadCSV()">Upload CSV</button>
+        <div id="bulk_result"></div>
+        <button class="btn-secondary" onclick="downloadSample()">Download Sample</button>
+    </div>
+</div>
+
+<!-- TAB 4 -->
+<div id="view" class="tab-content">
+    <div class="stats-grid">
+        <div class="stat-card"><div id="total_students" class="stat-number">0</div></div>
+        <div class="stat-card"><div id="total_classes" class="stat-number">0</div></div>
+    </div>
+    <div class="section">
+        <select id="filter_class_id" onchange="loadStudents()"></select>
+        <button class="btn-secondary" onclick="loadStudents()">Refresh</button>
+        <div id="students_table"></div>
+    </div>
+</div>
+
+</div>
+
+<!-- ORIGINAL SCRIPT (UNCHANGED LOGIC) -->
 <script>
-/* YOUR ENTIRE ORIGINAL SCRIPT GOES HERE — UNCHANGED */
-/* (Exactly the same JS you sent previously) */
+const API_URL = 'http://localhost:5000/api';
+
+function switchTab(tabName, event) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById(tabName).classList.add('active');
+    if (tabName === 'view') { loadStudents(); loadStats(); }
+    if (tabName === 'students' || tabName === 'view') loadClassesDropdown();
+    if (tabName === 'classes') loadClasses();
+}
+
+async function addClass() {
+    const data = {
+        class_id: parseInt(class_id.value),
+        class_name: class_name.value,
+        department: department.value
+    };
+    const r = await fetch(`${API_URL}/classes`, {
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
+    });
+    class_result.innerHTML = `<div class="success">Done</div>`;
+    loadClasses();
+}
+
+async function loadClasses() {
+    const r = await fetch(`${API_URL}/classes`);
+    const d = await r.json();
+    classes_list.innerHTML = `<table class="students-table">${d.map(c=>`<tr><td>${c.class_id}</td><td>${c.class_name}</td><td>${c.department}</td></tr>`).join('')}</table>`;
+}
+
+async function loadClassesDropdown() {
+    const r = await fetch(`${API_URL}/classes`);
+    const d = await r.json();
+    [student_class_id, filter_class_id].forEach(s=>{
+        s.innerHTML = '<option value="">Select</option>';
+        d.forEach(c=>s.innerHTML+=`<option value="${c.class_id}">${c.class_name}</option>`);
+    });
+}
+
+async function addStudent() {
+    await fetch(`${API_URL}/students`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({reg_no:reg_no.value, student_name:student_name.value, class_id:+student_class_id.value})
+    });
+    student_result.innerHTML = `<div class="success">Added</div>`;
+}
+
+function handleFileSelect() {
+    file_name.textContent = csv_file.files[0]?.name || '';
+}
+
+async function uploadCSV() {
+    const fd = new FormData();
+    fd.append('file', csv_file.files[0]);
+    await fetch(`${API_URL}/students/bulk`, { method:'POST', body:fd });
+    bulk_result.innerHTML = `<div class="success">Uploaded</div>`;
+}
+
+function downloadSample() {
+    const b = new Blob(["reg_no,student_name,class_id"],{type:'text/csv'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='sample.csv';a.click();
+}
+
+async function loadStudents() {
+    const r = await fetch(`${API_URL}/students`);
+    const d = await r.json();
+    students_table.innerHTML = `<table class="students-table">${d.map(s=>`<tr><td>${s.reg_no}</td><td>${s.student_name}</td><td>${s.class_id}</td></tr>`).join('')}</table>`;
+}
+
+async function loadStats() {
+    const s = await (await fetch(`${API_URL}/students`)).json();
+    const c = await (await fetch(`${API_URL}/classes`)).json();
+    total_students.textContent = s.length;
+    total_classes.textContent = c.length;
+}
+
+loadClasses();
+loadClassesDropdown();
 </script>
 
-<!-- ===== GSAP UI ONLY ===== -->
+<!-- GSAP -->
 <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
 <script>
-gsap.from(".container", { y: 40, opacity: 0, duration: 0.7 });
+gsap.from(".container",{y:30,opacity:0,duration:0.6});
 
-const zap = document.querySelector('.zap');
-window.addEventListener('mousemove', e => {
-    gsap.to(zap, {
-        x: e.clientX,
-        y: e.clientY,
-        duration: 0.25,
-        ease: "power3.out"
-    });
+const lightning=document.getElementById("lightning");
+window.addEventListener("mousemove",e=>{
+    let p=[],x=e.clientX,y=e.clientY;
+    for(let i=0;i<8;i++){x+=(Math.random()-0.5)*30;y+=(Math.random()-0.5)*30;p.push(`${x},${y}`);}
+    lightning.setAttribute("points",p.join(" "));
+    gsap.fromTo(lightning,{opacity:1},{opacity:0,duration:0.35});
 });
 </script>
 
 </body>
 </html>
+
 
