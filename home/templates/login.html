@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Login — Codex Institutions</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #29524A;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ANIMATED BACKGROUND PARTICLES */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: rgba(224, 251, 252, 0.3);
+      border-radius: 50%;
+      animation: float 15s infinite ease-in-out;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(-100vh) translateX(50px); opacity: 0; }
+    }
+
+    /* HEADER */
+    header {
+      height: 70px;
+      padding: 0 40px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #06070E;
+      border-bottom: 2px solid rgba(224, 251, 252, 0.1);
+      font-weight: 600;
+      font-size: 1.3rem;
+      color: #ffffff;
+      position: relative;
+      z-index: 10;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    header img {
+      width: 38px;
+      height: 38px;
+      filter: drop-shadow(0 2px 8px rgba(224, 251, 252, 0.3));
+      animation: logoFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes logoFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+
+    .header-glow {
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #E0FBFC, transparent);
+      animation: headerGlow 3s infinite;
+    }
+
+    @keyframes headerGlow {
+      0%, 100% { width: 0; left: 0; }
+      50% { width: 100%; left: 0; }
+    }
+
+    /* PAGE CENTER */
+    .page {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 16px;
+      min-height: calc(100vh - 70px);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* LOGIN CARD */
+    .container {
+      width: 100%;
+      max-width: 440px;
+      background: #E0FBFC;
+      padding: 44px;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(224, 251, 252, 0.1);
+      position: relative;
+      animation: slideIn 0.6s ease-out;
+      overflow: hidden;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Decorative elements */
+    .container::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(41, 82, 74, 0.1) 0%, transparent 70%);
+      animation: rotate 20s linear infinite;
+    }
+
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .title {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #06070E;
+      position: relative;
+      z-index: 1;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.95rem;
+      color: #29524A;
+      margin-bottom: 32px;
+      opacity: 0.8;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* INPUT WRAPPER */
+    .input-wrapper {
+      position: relative;
+      margin-top: 24px;
+    }
+
+    label {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #06070E;
+      display: block;
+      margin-bottom: 8px;
+      transition: color 0.3s ease;
+    }
+
+    .input-group {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #29524A;
+      opacity: 0.6;
+      transition: all 0.3s ease;
+      font-size: 1.1rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 15px 16px 15px 48px;
+      border-radius: 12px;
+      border: 2px solid transparent;
+      font-size: 1rem;
+      background: rgba(255, 255, 255, 0.9);
+      color: #06070E;
+      transition: all 0.3s ease;
+      font-family: 'Inter', sans-serif;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #29524A;
+      background: #ffffff;
+      box-shadow: 0 4px 16px rgba(41, 82, 74, 0.2);
+      transform: translateY(-2px);
+    }
+
+    input:focus + .input-icon {
+      color: #29524A;
+      opacity: 1;
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    input::placeholder {
+      color: #29524A;
+      opacity: 0.5;
+    }
+
+    /* BUTTON */
+    .btn {
+      width: 100%;
+      margin-top: 32px;
+      padding: 16px;
+      background: linear-gradient(135deg, #29524A 0%, #1a3d36 100%);
+      border: none;
+      border-radius: 14px;
+      color: #E0FBFC;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 20px rgba(41, 82, 74, 0.3);
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(224, 251, 252, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    .btn:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(41, 82, 74, 0.4);
+    }
+
+    .btn:active {
+      transform: translateY(-1px);
+    }
+
+    .btn span {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* FLASH MESSAGE */
+    .flash {
+      background: rgba(220, 38, 38, 0.1);
+      border: 2px solid rgba(220, 38, 38, 0.3);
+      color: #991b1b;
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      margin-bottom: 24px;
+      animation: shake 0.4s ease-in-out;
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+
+    .note {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #29524A;
+      margin-top: 28px;
+      line-height: 1.6;
+      opacity: 0.8;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* LOADING SPINNER */
+    .spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(224, 251, 252, 0.3);
+      border-top-color: #E0FBFC;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-left: 10px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .btn.loading span {
+      opacity: 0.6;
+    }
+
+    .btn.loading .spinner {
+      display: inline-block;
+    }
+
+    /* PASSWORD TOGGLE */
+    .password-toggle {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #29524A;
+      opacity: 0.6;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1rem;
+      z-index: 10;
+    }
+
+    .password-toggle:hover {
+      opacity: 1;
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 480px) {
+      .container {
+        padding: 32px 24px;
+      }
+      
+      header {
+        padding: 0 20px;
+        font-size: 1.1rem;
+      }
+
+      .title {
+        font-size: 1.6rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ANIMATED BACKGROUND -->
+  <div class="particles" id="particles"></div>
+
+  <!-- HEADER -->
+  <header>
+    <img src="https://cdn-icons-png.flaticon.com/512/3064/3064197.png" alt="Logo">
+    Codex Institutions
+    <div class="header-glow"></div>
+  </header>
+
+  <!-- PAGE CENTER -->
+  <div class="page">
+    <!-- LOGIN CARD -->
+    <div class="container">
+      <div class="title">Welcome Back</div>
+      <div class="subtitle">Access Codex Institutions Portal</div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, msg in messages %}
+            <div class="flash">
+              <i class="fas fa-exclamation-circle"></i> {{ msg }}
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('login') }}" id="loginForm">
+        {{ form.hidden_tag() }}
+
+        <div class="input-wrapper">
+          <label for="reg_no">Registration No / Email</label>
+          <div class="input-group">
+            <i class="fas fa-user input-icon"></i>
+            {{ form.reg_no(id="reg_no", placeholder="23uai0001 or student@codex.edu") }}
+          </div>
+        </div>
+
+        <div class="input-wrapper">
+          <label for="password">Password</label>
+          <div class="input-group">
+            <i class="fas fa-lock input-icon"></i>
+            {{ form.password(id="password", placeholder="Enter your password") }}
+            <i class="fas fa-eye password-toggle" id="togglePassword"></i>
+          </div>
+        </div>
+
+        
+        <button type="submit" class="btn" id="submitBtn">
+          <span>Login and Continue</span>
+          <div class="spinner"></div>
+        </button>
+      </form>
+
+      <p class="note">
+        <i class="fas fa-shield-alt"></i> Students, Staff, and Admins must use official Codex credentials.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // Animated background particles
+    const particlesContainer = document.getElementById('particles');
+    for (let i = 0; i < 30; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.animationDelay = Math.random() * 15 + 's';
+      particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+      particlesContainer.appendChild(particle);
+    }
+
+    // Password toggle
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+
+    togglePassword.addEventListener('click', function() {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      this.classList.toggle('fa-eye');
+      this.classList.toggle('fa-eye-slash');
+    });
+
+    // Form submission animation
+    const loginForm = document.getElementById('loginForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    loginForm.addEventListener('submit', function(e) {
+      submitBtn.classList.add('loading');
+    });
+
+    // Input focus animations
+    const inputs = document.querySelectorAll('input');
+    inputs.forEach(input => {
+      input.addEventListener('focus', function() {
+        this.parentElement.style.transform = 'scale(1.01)';
+      });
+      
+      input.addEventListener('blur', function() {
+        this.parentElement.style.transform = 'scale(1)';
+      });
+    });
+  </script>
+</body>
+</html>

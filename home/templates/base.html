@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{% block title %}Codex Portal{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background: #29524A;
+      color: #ffffff;
+      overflow-x: hidden;
+    }
+
+    /* ANIMATED BACKGROUND */
+    .bg-particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    .particle-dot {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background: rgba(224, 251, 252, 0.4);
+      border-radius: 50%;
+      animation: particleFloat 20s infinite ease-in-out;
+    }
+
+    @keyframes particleFloat {
+      0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(-100vh) translateX(30px); opacity: 0; }
+    }
+
+    /* HEADER */
+    header { 
+      background: #06070E;
+      padding: 16px 32px;
+      color: #ffffff;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 2px solid rgba(224, 251, 252, 0.1);
+    }
+
+    header > div:first-child {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.2rem;
+    }
+
+    header img {
+      width: 36px;
+      height: 36px;
+      filter: brightness(0) invert(1);
+      animation: logoSpin 20s linear infinite;
+      transition: transform 0.3s ease;
+    }
+
+    header img:hover {
+      transform: scale(1.1) rotate(360deg);
+      animation: none;
+    }
+
+    @keyframes logoSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.95rem;
+    }
+
+    .user-badge {
+      background: rgba(224, 251, 252, 0.15);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border: 1px solid rgba(224, 251, 252, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .user-badge:hover {
+      background: rgba(224, 251, 252, 0.25);
+      transform: translateY(-2px);
+    }
+
+    header a {
+      color: #E0FBFC;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      border: 1px solid transparent;
+    }
+
+    header a:hover {
+      background: rgba(224, 251, 252, 0.1);
+      border-color: rgba(224, 251, 252, 0.3);
+      transform: translateY(-2px);
+    }
+
+    /* LAYOUT */
+    .layout { 
+      display: flex;
+      min-height: calc(100vh - 68px);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* SIDEBAR */
+    .sidebar { 
+      width: 260px;
+      background: #E0FBFC;
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+      padding: 24px 16px;
+      transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      position: relative;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .sidebar.collapsed {
+      width: 80px;
+    }
+
+    .sidebar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(180deg, #29524A, #06070E);
+      opacity: 0.5;
+    }
+
+    /* SIDEBAR TOGGLE */
+    .sidebar-toggle {
+      position: absolute;
+      top: 20px;
+      right: -15px;
+      width: 30px;
+      height: 30px;
+      background: #29524A;
+      border: 2px solid #E0FBFC;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 10;
+      color: #E0FBFC;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .sidebar-toggle:hover {
+      transform: scale(1.15) rotate(180deg);
+      background: #06070E;
+    }
+
+    /* SIDEBAR LINKS */
+    .sidebar a { 
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      color: #06070E;
+      text-decoration: none;
+      font-size: 0.95rem;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      font-weight: 500;
+    }
+
+    .sidebar a::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 4px;
+      height: 100%;
+      background: #29524A;
+      transform: scaleY(0);
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar a:hover {
+      background: rgba(41, 82, 74, 0.1);
+      color: #29524A;
+      transform: translateX(8px);
+      box-shadow: 0 4px 12px rgba(41, 82, 74, 0.15);
+    }
+
+    .sidebar a:hover::before {
+      transform: scaleY(1);
+    }
+
+    .sidebar a.active {
+      background: linear-gradient(135deg, rgba(41, 82, 74, 0.15), rgba(6, 7, 14, 0.1));
+      color: #06070E;
+      font-weight: 600;
+    }
+
+    .sidebar a i {
+      font-size: 1.1rem;
+      min-width: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar a:hover i {
+      transform: scale(1.2) rotate(5deg);
+    }
+
+    .sidebar.collapsed a span {
+      display: none;
+    }
+
+    .sidebar.collapsed a {
+      justify-content: center;
+      padding: 12px;
+    }
+
+    /* CONTENT */
+    .content { 
+      flex: 1;
+      padding: 32px;
+      background: #29524A;
+      transition: all 0.4s ease;
+    }
+
+    /* FLASH MESSAGES */
+    .flash-container {
+      margin-bottom: 24px;
+    }
+
+    .flash-message {
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: rgba(239, 68, 68, 0.15);
+      border-left: 4px solid #ef4444;
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: slideInRight 0.5s ease-out;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      color: #ffffff;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .flash-message::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+      to { left: 100%; }
+    }
+
+    .flash-message.success {
+      background: rgba(34, 197, 94, 0.15);
+      border-left-color: #22c55e;
+    }
+
+    .flash-message i {
+      font-size: 1.2rem;
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    /* SCROLLBAR */
+    .sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+      background: rgba(41, 82, 74, 0.1);
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: rgba(41, 82, 74, 0.3);
+      border-radius: 3px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+      background: rgba(41, 82, 74, 0.5);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed;
+        left: -260px;
+        top: 68px;
+        height: calc(100vh - 68px);
+        z-index: 99;
+      }
+
+      .sidebar.mobile-open {
+        left: 0;
+      }
+
+      .mobile-overlay {
+        display: none;
+        position: fixed;
+        top: 68px;
+        left: 0;
+        width: 100%;
+        height: calc(100vh - 68px);
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 98;
+      }
+
+      .mobile-overlay.active {
+        display: block;
+      }
+
+      .mobile-menu-btn {
+        display: block;
+        background: none;
+        border: none;
+        color: #ffffff;
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 8px;
+      }
+
+      .content {
+        padding: 20px;
+      }
+    }
+
+    @media (min-width: 769px) {
+      .mobile-menu-btn {
+        display: none;
+      }
+    }
+
+    /* CONTENT CARDS */
+    .content-card {
+      background: rgba(224, 251, 252, 0.1);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(224, 251, 252, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .content-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      border-color: rgba(224, 251, 252, 0.4);
+    }
+  </style>
+</head>
+
+<body>
+  <!-- BACKGROUND PARTICLES -->
+  <div class="bg-particles" id="bgParticles"></div>
+
+  <!-- HEADER -->
+  <header>
+    <div>
+      <button class="mobile-menu-btn" onclick="toggleMobileSidebar()">
+        <i class="fas fa-bars"></i>
+      </button>
+      <img src="https://cdn-icons-png.flaticon.com/512/3064/3064197.png" alt="Logo">
+      Codex Institutions
+    </div>
+    {% if current_user.is_authenticated %}
+      <div class="user-info">
+        <span class="user-badge">
+          <i class="fas fa-user-circle"></i>
+          {{ current_user.full_name or current_user.reg_no }}
+        </span>
+        <span class="user-badge">
+          <i class="fas fa-shield-alt"></i>
+          {{ current_user.role|upper }}
+        </span>
+        <a href="{{ url_for('logout') }}">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+      </div>
+    {% endif %}
+  </header>
+
+  <!-- MOBILE OVERLAY -->
+  <div class="mobile-overlay" id="mobileOverlay" onclick="toggleMobileSidebar()"></div>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-chevron-left"></i>
+      </div>
+      {% block sidebar %}{% endblock %}
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="content">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-container">
+            {% for category, msg in messages %}
+              <div class="flash-message {{ category }}">
+                <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' }}"></i>
+                <span>{{ msg }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <script>
+    // Background particles
+    const bgParticles = document.getElementById('bgParticles');
+    for (let i = 0; i < 25; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle-dot';
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.animationDelay = Math.random() * 20 + 's';
+      particle.style.animationDuration = (Math.random() * 15 + 15) + 's';
+      bgParticles.appendChild(particle);
+    }
+
+    // Sidebar toggle (desktop)
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const toggle = document.querySelector('.sidebar-toggle i');
+      sidebar.classList.toggle('collapsed');
+      
+      if (sidebar.classList.contains('collapsed')) {
+        toggle.classList.remove('fa-chevron-left');
+        toggle.classList.add('fa-chevron-right');
+      } else {
+        toggle.classList.remove('fa-chevron-right');
+        toggle.classList.add('fa-chevron-left');
+      }
+    }
+
+    // Mobile sidebar toggle
+    function toggleMobileSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('mobileOverlay');
+      sidebar.classList.toggle('mobile-open');
+      overlay.classList.toggle('active');
+    }
+
+    // Active link highlighting
+    document.addEventListener('DOMContentLoaded', function() {
+      const currentPath = window.location.pathname;
+      const sidebarLinks = document.querySelectorAll('.sidebar a');
+      
+      sidebarLinks.forEach(link => {
+        if (link.getAttribute('href') === currentPath) {
+          link.classList.add('active');
+        }
+      });
+    });
+
+    // Auto-dismiss flash messages
+    setTimeout(() => {
+      const flashes = document.querySelectorAll('.flash-message');
+      flashes.forEach(flash => {
+        flash.style.animation = 'slideInRight 0.5s ease-out reverse';
+        setTimeout(() => flash.remove(), 500);
+      });
+    }, 5000);
+  </script>
+</body>
+</html>
