@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Attendance</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #11998e;
+            margin-bottom: 10px;
+            font-size: 32px;
+            text-align: center;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .search-box {
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #11998e;
+        }
+        button {
+            width: 100%;
+            background: #11998e;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #0d7a6f;
+        }
+        .result-card {
+            margin-top: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            color: white;
+            display: none;
+        }
+        .result-card.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .student-info {
+            margin-bottom: 20px;
+        }
+        .student-info h2 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        .student-info p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-box {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        .percentage-circle {
+            width: 150px;
+            height: 150px;
+            margin: 20px auto;
+            border-radius: 50%;
+            background: conic-gradient(
+                #38ef7d 0deg,
+                #38ef7d var(--percentage),
+                rgba(255,255,255,0.3) var(--percentage),
+                rgba(255,255,255,0.3) 360deg
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .percentage-inner {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .percentage-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #11998e;
+        }
+        .percentage-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .error-box {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8d7da;
+            color: #721c24;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+            display: none;
+        }
+        .error-box.show {
+            display: block;
+        }
+        .nav-links {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        .nav-link {
+            color: #11998e;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 10px 20px;
+            border: 2px solid #11998e;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        .nav-link:hover {
+            background: #11998e;
+            color: white;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        .status-good {
+            background: #38ef7d;
+            color: #0d7a6f;
+        }
+        .status-warning {
+            background: #ffd93d;
+            color: #856404;
+        }
+        .status-danger {
+            background: #ff6b6b;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Check Attendance</h1>
+        <p class="subtitle">Enter registration number to view attendance percentage</p>
+
+        <div class="search-box">
+            <div class="form-group">
+                <label>Registration Number:</label>
+                <input type="text" id="reg_no" placeholder="e.g., 21CS001" onkeypress="handleKeyPress(event)">
+            </div>
+            <button onclick="checkAttendance()">🔍 Check Attendance</button>
+        </div>
+
+        <div id="result" class="result-card">
+            <div class="student-info">
+                <h2 id="student_name">-</h2>
+                <p id="student_reg">Reg No: -</p>
+                <span id="status_badge" class="status-badge">-</span>
+            </div>
+
+            <div class="percentage-circle" id="percentage_circle">
+                <div class="percentage-inner">
+                    <div class="percentage-value" id="percentage_value">0%</div>
+                    <div class="percentage-text">Attendance</div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-number" id="total_classes">0</div>
+                    <div class="stat-label">Total Classes</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="attended_classes">0</div>
+                    <div class="stat-label">Attended</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="missed_classes">0</div>
+                    <div class="stat-label">Missed</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="error" class="error-box">
+            <strong>❌ Error:</strong> <span id="error_message">-</span>
+        </div>
+
+        <div class="nav-links">
+            <a href="/admin" class="nav-link">👨‍💼 Admin Panel</a>
+            <a href="/staff" class="nav-link">📝 Mark Attendance</a>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                checkAttendance();
+            }
+        }
+
+        async function checkAttendance() {
+            const regNo = document.getElementById('reg_no').value.trim();
+
+            if (!regNo) {
+                showError('Please enter a registration number');
+                return;
+            }
+
+            // Hide previous results
+            document.getElementById('result').classList.remove('show');
+            document.getElementById('error').classList.remove('show');
+
+            try {
+                const response = await fetch(`${API_URL}/attendance/${regNo}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayResult(data);
+                } else {
+                    showError(data.error || 'Student not found');
+                }
+            } catch (error) {
+                showError('Error fetching attendance data. Please try again.');
+            }
+        }
+
+        function displayResult(data) {
+            // Update student info
+            document.getElementById('student_name').textContent = data.student_name;
+            document.getElementById('student_reg').textContent = `Reg No: ${data.reg_no}`;
+
+            // Update percentage
+            const percentage = data.attendance_percentage;
+            document.getElementById('percentage_value').textContent = `${percentage}%`;
+
+            // Update stats
+            document.getElementById('total_classes').textContent = data.total_classes;
+            document.getElementById('attended_classes').textContent = data.attended_classes;
+            document.getElementById('missed_classes').textContent = data.total_classes - data.attended_classes;
+
+            // Update circular progress
+            const circle = document.getElementById('percentage_circle');
+            const degrees = (percentage / 100) * 360;
+            circle.style.setProperty('--percentage', `${degrees}deg`);
+
+            // Set status badge
+            const badge = document.getElementById('status_badge');
+            if (percentage >= 75) {
+                badge.textContent = '✓ Good Standing';
+                badge.className = 'status-badge status-good';
+            } else if (percentage >= 60) {
+                badge.textContent = '⚠ Warning';
+                badge.className = 'status-badge status-warning';
+            } else {
+                badge.textContent = '✗ Low Attendance';
+                badge.className = 'status-badge status-danger';
+            }
+
+            // Show result
+            document.getElementById('result').classList.add('show');
+        }
+
+        function showError(message) {
+            document.getElementById('error_message').textContent = message;
+            document.getElementById('error').classList.add('show');
+        }
+
+        // Focus on input on page load
+        window.onload = function() {
+            document.getElementById('reg_no').focus();
+        };
+    </script>
+</body>
+</html>
