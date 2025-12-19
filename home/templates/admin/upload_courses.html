@@ -1,0 +1,838 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Courses — Codex{% endblock %}
+
+{% block sidebar %}
+  <h3>Admin Menu</h3>
+  <a href="{{ url_for('admin_home') }}"><i class="fas fa-home"></i> <span>Overview / Course Assign</span></a>
+  <a href="{{ url_for('admin_ai_chat') }}"><i class="fas fa-robot"></i> <span>AI Assistant</span></a>
+{% endblock %}
+
+{% block content %}
+  <style>
+    /* PAGE HEADER */
+    .upload-header {
+      background: linear-gradient(135deg, rgba(224, 251, 252, 0.15), rgba(224, 251, 252, 0.05));
+      padding: 28px;
+      border-radius: 16px;
+      margin-bottom: 32px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      animation: slideInDown 0.6s ease-out;
+    }
+
+    @keyframes slideInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .upload-header h2 {
+      margin: 0 0 12px 0;
+      color: #E0FBFC;
+      font-size: 2rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .upload-header h2::before {
+      content: '📚';
+      font-size: 2rem;
+      animation: bookFlip 3s infinite;
+    }
+
+    @keyframes bookFlip {
+      0%, 100% { transform: rotateY(0deg); }
+      50% { transform: rotateY(180deg); }
+    }
+
+    .upload-header p {
+      margin: 0;
+      color: #E0FBFC;
+      font-size: 1.05rem;
+      opacity: 0.9;
+      line-height: 1.6;
+    }
+
+    /* INFO CARD */
+    .info-card {
+      background: rgba(224, 251, 252, 0.08);
+      padding: 24px;
+      border-radius: 16px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      margin-bottom: 32px;
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .info-card h3 {
+      color: #E0FBFC;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .info-card h3::before {
+      content: '📋';
+      font-size: 1.5rem;
+    }
+
+    .info-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .info-list li {
+      background: rgba(224, 251, 252, 0.1);
+      padding: 12px 16px;
+      border-radius: 10px;
+      color: #E0FBFC;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+
+    .info-list li:hover {
+      background: rgba(224, 251, 252, 0.2);
+      border-color: rgba(224, 251, 252, 0.4);
+      transform: translateX(8px);
+    }
+
+    .info-list li::before {
+      content: '✓';
+      background: #E0FBFC;
+      color: #06070E;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-weight: 800;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    /* UPLOAD ZONE */
+    .upload-container {
+      background: rgba(224, 251, 252, 0.08);
+      padding: 40px;
+      border-radius: 20px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      animation: slideInUp 0.6s ease-out;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .upload-container::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(224, 251, 252, 0.1) 0%, transparent 70%);
+      animation: rotate 20s linear infinite;
+    }
+
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* DRAG AND DROP ZONE */
+    .drop-zone {
+      border: 3px dashed rgba(224, 251, 252, 0.3);
+      border-radius: 16px;
+      padding: 60px 40px;
+      text-align: center;
+      transition: all 0.4s ease;
+      cursor: pointer;
+      background: rgba(224, 251, 252, 0.05);
+      position: relative;
+      z-index: 1;
+    }
+
+    .drop-zone:hover {
+      border-color: #E0FBFC;
+      background: rgba(224, 251, 252, 0.12);
+      transform: scale(1.02);
+    }
+
+    .drop-zone.drag-over {
+      border-color: #E0FBFC;
+      background: rgba(224, 251, 252, 0.2);
+      border-style: solid;
+      transform: scale(1.05);
+      box-shadow: 0 8px 32px rgba(224, 251, 252, 0.3);
+    }
+
+    .drop-zone-icon {
+      font-size: 5rem;
+      color: #E0FBFC;
+      margin-bottom: 20px;
+      display: inline-block;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+
+    .drop-zone-text {
+      color: #E0FBFC;
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .drop-zone-hint {
+      color: #E0FBFC;
+      font-size: 1rem;
+      opacity: 0.8;
+      margin-bottom: 20px;
+    }
+
+    .file-types {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .file-type-badge {
+      background: rgba(224, 251, 252, 0.15);
+      padding: 8px 16px;
+      border-radius: 20px;
+      color: #E0FBFC;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 2px solid rgba(224, 251, 252, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .file-type-badge:hover {
+      background: rgba(224, 251, 252, 0.25);
+      transform: scale(1.1);
+    }
+
+    /* FILE INPUT (HIDDEN) */
+    .file-input {
+      display: none;
+    }
+
+    /* BROWSE BUTTON */
+    .browse-btn {
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #E0FBFC 0%, #b8e9eb 100%);
+      border: none;
+      border-radius: 12px;
+      color: #06070E;
+      font-weight: 700;
+      font-size: 1.05rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 16px rgba(224, 251, 252, 0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .browse-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    .browse-btn:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    .browse-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(224, 251, 252, 0.5);
+      background: linear-gradient(135deg, #ffffff 0%, #E0FBFC 100%);
+    }
+
+    .browse-btn i,
+    .browse-btn span {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* FILE PREVIEW */
+    .file-preview {
+      display: none;
+      background: rgba(224, 251, 252, 0.15);
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 24px;
+      border: 2px solid rgba(224, 251, 252, 0.3);
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .file-preview.active {
+      display: block;
+    }
+
+    .file-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: #E0FBFC;
+    }
+
+    .file-icon {
+      font-size: 3rem;
+      color: #E0FBFC;
+      animation: iconPulse 2s infinite;
+    }
+
+    @keyframes iconPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .file-details {
+      flex: 1;
+    }
+
+    .file-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #E0FBFC;
+      word-break: break-all;
+    }
+
+    .file-size {
+      font-size: 0.9rem;
+      opacity: 0.8;
+      color: #E0FBFC;
+    }
+
+    .remove-file {
+      background: rgba(239, 68, 68, 0.2);
+      border: 2px solid rgba(239, 68, 68, 0.4);
+      color: #E0FBFC;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+    }
+
+    .remove-file:hover {
+      background: rgba(239, 68, 68, 0.3);
+      transform: scale(1.05);
+    }
+
+    /* SUBMIT BUTTON */
+    .submit-btn {
+      padding: 16px 48px;
+      background: linear-gradient(135deg, #E0FBFC 0%, #b8e9eb 100%);
+      border: none;
+      border-radius: 12px;
+      color: #06070E;
+      font-weight: 700;
+      font-size: 1.15rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 24px rgba(224, 251, 252, 0.4);
+      margin-top: 24px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .submit-btn.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .submit-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    .submit-btn.active:hover::before {
+      width: 400px;
+      height: 400px;
+    }
+
+    .submit-btn.active:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 36px rgba(224, 251, 252, 0.6);
+      background: linear-gradient(135deg, #ffffff 0%, #E0FBFC 100%);
+    }
+
+    .submit-btn i,
+    .submit-btn span {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* LOADING SPINNER */
+    .spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(6, 7, 14, 0.3);
+      border-top-color: #06070E;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .submit-btn.loading .spinner {
+      display: inline-block;
+    }
+
+    .submit-btn.loading span {
+      opacity: 0.6;
+    }
+
+    /* EXAMPLE SECTION */
+    .example-section {
+      background: rgba(224, 251, 252, 0.08);
+      padding: 24px;
+      border-radius: 16px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      margin-top: 32px;
+      animation: fadeIn 1s ease-out;
+    }
+
+    .example-section h3 {
+      color: #E0FBFC;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .example-section h3::before {
+      content: '📊';
+      font-size: 1.5rem;
+    }
+
+    .example-table-wrapper {
+      overflow-x: auto;
+      border-radius: 12px;
+      margin-top: 12px;
+    }
+
+    .example-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    .example-table thead {
+      background: linear-gradient(135deg, #E0FBFC 0%, #c8eef0 100%);
+      color: #06070E;
+    }
+
+    .example-table th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 700;
+      border-bottom: 2px solid rgba(41, 82, 74, 0.3);
+    }
+
+    .example-table td {
+      padding: 12px;
+      color: #06070E;
+      border-bottom: 1px solid rgba(224, 251, 252, 0.2);
+    }
+
+    .example-table tbody tr:hover {
+      background: rgba(224, 251, 252, 0.15);
+    }
+
+    .example-hint {
+      color: #E0FBFC;
+      font-size: 0.9rem;
+      opacity: 0.8;
+      margin-top: 12px;
+      font-style: italic;
+    }
+
+    /* TIPS SECTION */
+    .tips-section {
+      background: rgba(224, 251, 252, 0.08);
+      padding: 24px;
+      border-radius: 16px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      margin-top: 24px;
+      animation: fadeIn 1.2s ease-out;
+    }
+
+    .tips-section h3 {
+      color: #E0FBFC;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tips-section h3::before {
+      content: '💡';
+      font-size: 1.5rem;
+    }
+
+    .tips-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 12px;
+    }
+
+    .tips-list li {
+      color: #E0FBFC;
+      opacity: 0.9;
+      padding-left: 28px;
+      position: relative;
+      line-height: 1.6;
+      transition: all 0.3s ease;
+    }
+
+    .tips-list li:hover {
+      opacity: 1;
+      transform: translateX(8px);
+    }
+
+    .tips-list li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      color: #E0FBFC;
+      font-weight: bold;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .upload-header h2 {
+        font-size: 1.6rem;
+      }
+
+      .drop-zone {
+        padding: 40px 20px;
+      }
+
+      .drop-zone-icon {
+        font-size: 3.5rem;
+      }
+
+      .info-list {
+        grid-template-columns: 1fr;
+      }
+
+      .upload-container {
+        padding: 24px;
+      }
+
+      .file-info {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  </style>
+
+  <div class="upload-header">
+    <h2>Upload Course List</h2>
+    <p>Upload an Excel or CSV file with course information to add them to the system.</p>
+  </div>
+
+  <div class="info-card">
+    <h3>Required Columns</h3>
+    <ul class="info-list">
+      <li>Code</li>
+      <li>Name</li>
+      <li>Semester</li>
+      <li>Section</li>
+    </ul>
+  </div>
+
+  <div class="upload-container">
+    <form method="post" enctype="multipart/form-data" id="uploadForm">
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-zone-icon">
+          <i class="fas fa-cloud-upload-alt"></i>
+        </div>
+        <div class="drop-zone-text">Drag & Drop your file here</div>
+        <div class="drop-zone-hint">or click to browse</div>
+        <button type="button" class="browse-btn" onclick="document.getElementById('fileInput').click()">
+          <i class="fas fa-folder-open"></i>
+          <span>Browse Files</span>
+        </button>
+        <div class="file-types">
+          <span class="file-type-badge"><i class="fas fa-file-excel"></i> .XLSX</span>
+          <span class="file-type-badge"><i class="fas fa-file-excel"></i> .XLS</span>
+          <span class="file-type-badge"><i class="fas fa-file-csv"></i> .CSV</span>
+        </div>
+      </div>
+
+      <input type="file" name="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv" required>
+
+      <div class="file-preview" id="filePreview">
+        <div class="file-info">
+          <div class="file-icon">
+            <i class="fas fa-file-excel"></i>
+          </div>
+          <div class="file-details">
+            <div class="file-name" id="fileName"></div>
+            <div class="file-size" id="fileSize"></div>
+          </div>
+          <button type="button" class="remove-file" onclick="removeFile()">
+            <i class="fas fa-times"></i> Remove
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">
+        <i class="fas fa-upload"></i>
+        <span>Upload & Save Courses</span>
+        <div class="spinner"></div>
+      </button>
+    </form>
+  </div>
+
+  <div class="example-section">
+    <h3>File Format Example</h3>
+    <div class="example-table-wrapper">
+      <table class="example-table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Semester</th>
+            <th>Section</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>CS101</td>
+            <td>Introduction to Programming</td>
+            <td>1</td>
+            <td>A</td>
+          </tr>
+          <tr>
+            <td>CS102</td>
+            <td>Data Structures</td>
+            <td>2</td>
+            <td>B</td>
+          </tr>
+          <tr>
+            <td>MATH201</td>
+            <td>Calculus II</td>
+            <td>3</td>
+            <td>A</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="example-hint">💡 Your Excel/CSV file should follow this format with these exact column headers.</p>
+  </div>
+
+  <div class="tips-section">
+    <h3>Tips for Best Results</h3>
+    <ul class="tips-list">
+      <li>Ensure all required columns (Code, Name, Semester, Section) are present in your file</li>
+      <li>Course codes should be unique to avoid duplicates</li>
+      <li>Semester values should be numeric (e.g., 1, 2, 3, 4)</li>
+      <li>Section identifiers are typically single letters (A, B, C, etc.)</li>
+      <li>Remove any empty rows or columns before uploading</li>
+      <li>Use the first row as headers matching the required column names exactly</li>
+    </ul>
+  </div>
+
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const filePreview = document.getElementById('filePreview');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const submitBtn = document.getElementById('submitBtn');
+    const uploadForm = document.getElementById('uploadForm');
+
+    // Click to browse
+    dropZone.addEventListener('click', (e) => {
+      if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'I' && e.target.tagName !== 'SPAN') {
+        fileInput.click();
+      }
+    });
+
+    // Drag and drop events
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, () => {
+        dropZone.classList.add('drag-over');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, () => {
+        dropZone.classList.remove('drag-over');
+      });
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      
+      if (files.length > 0) {
+        fileInput.files = files;
+        handleFileSelect();
+      }
+    });
+
+    // File input change
+    fileInput.addEventListener('change', handleFileSelect);
+
+    function handleFileSelect() {
+      const file = fileInput.files[0];
+      
+      if (file) {
+        // Check file type
+        const validTypes = ['.xlsx', '.xls', '.csv'];
+        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+        
+        if (!validTypes.includes(fileExtension)) {
+          alert('Please select a valid Excel or CSV file (.xlsx, .xls, .csv)');
+          fileInput.value = '';
+          return;
+        }
+
+        // Display file info
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        
+        filePreview.classList.add('active');
+        submitBtn.classList.add('active');
+        
+        // Update icon based on file type
+        const iconElement = filePreview.querySelector('.file-icon i');
+        if (fileExtension === '.csv') {
+          iconElement.className = 'fas fa-file-csv';
+        } else {
+          iconElement.className = 'fas fa-file-excel';
+        }
+      }
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    function removeFile() {
+      fileInput.value = '';
+      filePreview.classList.remove('active');
+      submitBtn.classList.remove('active');
+    }
+
+    // Form submission
+    uploadForm.addEventListener('submit', function(e) {
+      if (!fileInput.files || fileInput.files.length === 0) {
+        e.preventDefault();
+        alert('Please select a file to upload');
+        return;
+      }
+
+      submitBtn.classList.add('loading');
+      submitBtn.disabled = true;
+    });
+
+    // Animate tips on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.tips-list li').forEach((tip, index) => {
+      tip.style.opacity = '0';
+      tip.style.transform = 'translateY(20px)';
+      tip.style.transition = `all 0.5s ease ${index * 0.1}s`;
+      observer.observe(tip);
+    });
+  </script>
+{% endblock %}

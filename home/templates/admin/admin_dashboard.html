@@ -1,0 +1,701 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard — Codex{% endblock %}
+
+{% block sidebar %}
+  <h3 style="margin-top:0;margin-bottom:12px;font-size:1.05rem;">Admin Menu</h3>
+  <a href="{{ url_for('admin_home') }}" class="active"><i class="fas fa-home"></i> <span>Overview / Course Assign</span></a>
+  <a href="{{ url_for('admin_ai_chat') }}"><i class="fas fa-robot"></i> <span>AI Assistant</span></a>
+  <a href="{{ url_for('upload_courses') }}"><i class="fas fa-upload"></i> <span>Upload Courses (Excel)</span></a>
+  <a href="{{ url_for('admin_upload_staff') }}"><i class="fas fa-user-tie"></i> <span>Upload Staff (Excel)</span></a>
+  <a href="{{ url_for('admin_upload_hods') }}"><i class="fas fa-user-shield"></i> <span>Upload HODs (Excel)</span></a>
+{% endblock %}
+
+{% block content %}
+  <style>
+    /* DASHBOARD HEADER */
+    .dashboard-header {
+      background: linear-gradient(135deg, rgba(224, 251, 252, 0.15), rgba(224, 251, 252, 0.05));
+      padding: 24px;
+      border-radius: 16px;
+      margin-bottom: 24px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      animation: slideInDown 0.6s ease-out;
+    }
+
+    @keyframes slideInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .dashboard-header h2 {
+      margin: 0;
+      color: #E0FBFC;
+      font-size: 2rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .dashboard-header h2::before {
+      content: '📊';
+      font-size: 2rem;
+      animation: rotate 20s linear infinite;
+    }
+
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* STATISTICS CARDS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, rgba(224, 251, 252, 0.15), rgba(224, 251, 252, 0.08));
+      padding: 24px;
+      border-radius: 16px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.2s; }
+    .stat-card:nth-child(3) { animation-delay: 0.3s; }
+    .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(224, 251, 252, 0.15) 0%, transparent 70%);
+      transition: all 0.5s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+      border-color: rgba(224, 251, 252, 0.5);
+    }
+
+    .stat-card:hover::before {
+      top: -25%;
+      right: -25%;
+      width: 250px;
+      height: 250px;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: #E0FBFC;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #E0FBFC;
+      position: relative;
+      z-index: 1;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .stat-icon {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 2.5rem;
+      opacity: 0.15;
+      transition: all 0.4s ease;
+    }
+
+    .stat-card:hover .stat-icon {
+      opacity: 0.3;
+      transform: scale(1.2) rotate(15deg);
+    }
+
+    /* SECTION CARD */
+    .section-card {
+      background: rgba(224, 251, 252, 0.08);
+      padding: 28px;
+      border-radius: 16px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      margin-bottom: 24px;
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .section-card p {
+      color: #E0FBFC;
+      font-size: 1.05rem;
+      line-height: 1.6;
+      margin: 0 0 20px 0;
+      opacity: 0.9;
+    }
+
+    /* FORM STYLING */
+    .form-section {
+      background: rgba(224, 251, 252, 0.08);
+      padding: 32px;
+      border-radius: 16px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      animation: slideInUp 0.6s ease-out;
+    }
+
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .form-section h3 {
+      color: #E0FBFC;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin: 0 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .form-section h3::before {
+      content: '▸';
+      color: #E0FBFC;
+      font-size: 1.5rem;
+    }
+
+    .form-section select {
+      width: 100%;
+      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.95);
+      border: 2px solid transparent;
+      border-radius: 12px;
+      font-size: 1rem;
+      color: #06070E;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 24px;
+    }
+
+    .form-section select:focus {
+      outline: none;
+      border-color: #E0FBFC;
+      background: #ffffff;
+      box-shadow: 0 4px 16px rgba(224, 251, 252, 0.2);
+      transform: translateY(-2px);
+    }
+
+    /* RADIO BUTTONS */
+    .radio-group {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .radio-group label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      background: rgba(224, 251, 252, 0.1);
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: #E0FBFC;
+      font-weight: 500;
+    }
+
+    .radio-group label:hover {
+      background: rgba(224, 251, 252, 0.2);
+      border-color: rgba(224, 251, 252, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .radio-group input[type="radio"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      accent-color: #E0FBFC;
+    }
+
+    .radio-group input[type="radio"]:checked + span {
+      font-weight: 700;
+    }
+
+    .radio-group label:has(input:checked) {
+      background: rgba(224, 251, 252, 0.25);
+      border-color: #E0FBFC;
+      box-shadow: 0 4px 12px rgba(224, 251, 252, 0.3);
+    }
+
+    /* TABLE CONTROLS */
+    .table-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      position: relative;
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 12px 16px 12px 44px;
+      background: rgba(255, 255, 255, 0.95);
+      border: 2px solid transparent;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      color: #06070E;
+      transition: all 0.3s ease;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: #E0FBFC;
+      background: #ffffff;
+      box-shadow: 0 4px 16px rgba(224, 251, 252, 0.2);
+    }
+
+    .search-box i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(6, 7, 14, 0.5);
+      font-size: 1.1rem;
+    }
+
+    .select-all-btn {
+      padding: 12px 24px;
+      background: rgba(224, 251, 252, 0.15);
+      border: 2px solid rgba(224, 251, 252, 0.3);
+      border-radius: 12px;
+      color: #E0FBFC;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .select-all-btn:hover {
+      background: rgba(224, 251, 252, 0.25);
+      border-color: #E0FBFC;
+      transform: translateY(-2px);
+    }
+
+    /* TABLE STYLING */
+    .table-container {
+      overflow-x: auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    thead tr {
+      background: linear-gradient(135deg, #E0FBFC 0%, #c8eef0 100%);
+      color: #06070E;
+    }
+
+    thead th {
+      padding: 16px 12px;
+      text-align: left;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 0.5px;
+      border-bottom: 3px solid rgba(41, 82, 74, 0.3);
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    thead th:hover {
+      background: rgba(224, 251, 252, 0.8);
+    }
+
+    thead th::after {
+      content: '⇅';
+      position: absolute;
+      right: 8px;
+      opacity: 0.3;
+      font-size: 0.9rem;
+    }
+
+    tbody tr {
+      transition: all 0.3s ease;
+      border-bottom: 1px solid rgba(224, 251, 252, 0.2);
+    }
+
+    tbody tr:hover {
+      background: rgba(224, 251, 252, 0.15);
+      transform: scale(1.01);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    tbody td {
+      padding: 14px 12px;
+      color: #06070E;
+      border-right: 1px solid rgba(224, 251, 252, 0.15);
+    }
+
+    tbody td:last-child {
+      border-right: none;
+    }
+
+    tbody tr.hidden {
+      display: none;
+    }
+
+    /* CHECKBOX STYLING */
+    input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      accent-color: #29524A;
+      transition: all 0.2s ease;
+    }
+
+    input[type="checkbox"]:hover {
+      transform: scale(1.2);
+    }
+
+    /* SUBMIT BUTTON */
+    .submit-btn {
+      padding: 16px 40px;
+      background: linear-gradient(135deg, #E0FBFC 0%, #b8e9eb 100%);
+      border: none;
+      border-radius: 12px;
+      color: #06070E;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 20px rgba(224, 251, 252, 0.3);
+      margin-top: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .submit-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    .submit-btn:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(224, 251, 252, 0.5);
+      background: linear-gradient(135deg, #ffffff 0%, #E0FBFC 100%);
+    }
+
+    .submit-btn:active {
+      transform: translateY(-1px);
+    }
+
+    .submit-btn i {
+      font-size: 1.2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .submit-btn span {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .table-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search-box {
+        min-width: 100%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+
+  <div class="dashboard-header">
+    <h2>Admin Dashboard</h2>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <i class="fas fa-user-shield stat-icon"></i>
+      <div class="stat-label">HODs</div>
+      <div class="stat-value">{{ total_hods }}</div>
+    </div>
+    <div class="stat-card">
+      <i class="fas fa-chalkboard-teacher stat-icon"></i>
+      <div class="stat-label">Staff</div>
+      <div class="stat-value">{{ total_staff }}</div>
+    </div>
+    <div class="stat-card">
+      <i class="fas fa-user-graduate stat-icon"></i>
+      <div class="stat-label">Students</div>
+      <div class="stat-value">{{ total_students }}</div>
+    </div>
+    <div class="stat-card">
+      <i class="fas fa-book stat-icon"></i>
+      <div class="stat-label">Courses</div>
+      <div class="stat-value">{{ total_courses }}</div>
+    </div>
+  </div>
+
+  <!-- Instructions Section -->
+  <div class="section-card">
+    <p><i class="fas fa-info-circle"></i> Assign courses to HODs so each department can then assign staff for those subjects.</p>
+  </div>
+
+  <!-- Assignment Form -->
+  <form method="post" action="{{ url_for('admin_assign_courses') }}" class="form-section">
+    <h3>Select HOD</h3>
+    <select name="hod_id" required>
+      {% for h in hods %}
+        <option value="{{ h.id }}">{{ h.full_name or h.reg_no }} (HOD, ID {{ h.id }})</option>
+      {% else %}
+        <option disabled>No HOD users found</option>
+      {% endfor %}
+    </select>
+
+    <h3>Assignment Mode</h3>
+    <div class="radio-group">
+      <label>
+        <input type="radio" name="assign_mode" value="add" checked>
+        <span>Add to existing courses</span>
+      </label>
+      <label>
+        <input type="radio" name="assign_mode" value="replace">
+        <span>Replace entire course list</span>
+      </label>
+    </div>
+
+    <h3>Select Courses</h3>
+    
+    <!-- Table Controls -->
+    <div class="table-controls">
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Search courses by code, name, or department...">
+      </div>
+      <button type="button" class="select-all-btn" onclick="toggleSelectAll()">
+        <i class="fas fa-check-double"></i> Toggle All
+      </button>
+    </div>
+
+    <div class="table-container">
+      <table id="coursesTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable(0)">Select</th>
+            <th onclick="sortTable(1)">ID</th>
+            <th onclick="sortTable(2)">Code</th>
+            <th onclick="sortTable(3)">Name</th>
+            <th onclick="sortTable(4)">Semester</th>
+            <th onclick="sortTable(5)">Section</th>
+            <th onclick="sortTable(6)">Department ID</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in courses %}
+          <tr>
+            <td>
+              <input type="checkbox" name="course_ids" value="{{ c.id }}">
+            </td>
+            <td>{{ c.id }}</td>
+            <td>{{ c.code }}</td>
+            <td>{{ c.name }}</td>
+            <td>{{ c.semester }}</td>
+            <td>{{ c.section }}</td>
+            <td>{{ c.department_id or "-" }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7" style="text-align:center;padding:24px;color:#666;">
+              <i class="fas fa-inbox"></i> No courses found.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <button type="submit" class="submit-btn">
+      <i class="fas fa-check-circle"></i>
+      <span>Assign Selected Courses</span>
+    </button>
+  </form>
+
+  <script>
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    const table = document.getElementById('coursesTable');
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+    searchInput.addEventListener('keyup', function() {
+      const filter = this.value.toLowerCase();
+      
+      for (let i = 0; i < rows.length; i++) {
+        const cells = rows[i].getElementsByTagName('td');
+        let found = false;
+        
+        for (let j = 1; j < cells.length; j++) {
+          const cellText = cells[j].textContent || cells[j].innerText;
+          if (cellText.toLowerCase().indexOf(filter) > -1) {
+            found = true;
+            break;
+          }
+        }
+        
+        rows[i].classList.toggle('hidden', !found);
+      }
+    });
+
+    // Toggle select all checkboxes
+    function toggleSelectAll() {
+      const checkboxes = document.querySelectorAll('input[name="course_ids"]');
+      const visibleCheckboxes = Array.from(checkboxes).filter(cb => {
+        return !cb.closest('tr').classList.contains('hidden');
+      });
+      
+      const allChecked = visibleCheckboxes.every(cb => cb.checked);
+      
+      visibleCheckboxes.forEach(checkbox => {
+        checkbox.checked = !allChecked;
+      });
+    }
+
+    // Sort table
+    let sortDirection = {};
+    function sortTable(columnIndex) {
+      const tbody = table.getElementsByTagName('tbody')[0];
+      const rowsArray = Array.from(rows);
+      
+      if (!sortDirection[columnIndex]) {
+        sortDirection[columnIndex] = 'asc';
+      } else {
+        sortDirection[columnIndex] = sortDirection[columnIndex] === 'asc' ? 'desc' : 'asc';
+      }
+      
+      rowsArray.sort((a, b) => {
+        const aText = a.getElementsByTagName('td')[columnIndex].textContent.trim();
+        const bText = b.getElementsByTagName('td')[columnIndex].textContent.trim();
+        
+        const aVal = isNaN(aText) ? aText.toLowerCase() : parseFloat(aText);
+        const bVal = isNaN(bText) ? bText.toLowerCase() : parseFloat(bText);
+        
+        if (sortDirection[columnIndex] === 'asc') {
+          return aVal > bVal ? 1 : -1;
+        } else {
+          return aVal < bVal ? 1 : -1;
+        }
+      });
+      
+      rowsArray.forEach(row => tbody.appendChild(row));
+    }
+
+    // Animate stat cards on load
+    document.addEventListener('DOMContentLoaded', function() {
+      const statValues = document.querySelectorAll('.stat-value');
+      statValues.forEach((stat, index) => {
+        const finalValue = parseInt(stat.textContent);
+        let currentValue = 0;
+        const increment = Math.ceil(finalValue / 30);
+        
+        const counter = setInterval(() => {
+          currentValue += increment;
+          if (currentValue >= finalValue) {
+            stat.textContent = finalValue;
+            clearInterval(counter);
+          } else {
+            stat.textContent = currentValue;
+          }
+        }, 30);
+      });
+    });
+  </script>
+{% endblock %}
