@@ -25,10 +25,11 @@
 
         .wave {
             position: absolute;
-            width: 20px;
-            height: 20px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
-            border: 2px solid rgba(40, 167, 69, 0.6);
+            border: 2px solid rgba(40, 167, 69, 0.35);
+            box-shadow: 0 0 20px rgba(56, 239, 125, 0.35);
             transform: translate(-50%, -50%);
         }
 
@@ -101,6 +102,10 @@
             text-decoration: none;
             font-weight: bold;
         }
+
+        .nav-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 
@@ -114,7 +119,7 @@
 
     <div class="form-group">
         <label>Select Class:</label>
-        <select id="class_id" onchange="loadClassInfo()">
+        <select id="class_id">
             <option value="">-- Select Class --</option>
         </select>
     </div>
@@ -144,6 +149,7 @@
 
     <div id="result"></div>
 
+    <!-- ✅ ADMIN PANEL NAV -->
     <a href="/" class="nav-link">← Back to Admin Panel</a>
 </div>
 
@@ -243,7 +249,7 @@ loadClasses();
 <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
 
 <script>
-/* Page entry */
+/* Entry animation */
 gsap.from(".container", {
     y: 40,
     opacity: 0,
@@ -251,21 +257,28 @@ gsap.from(".container", {
     ease: "power2.out"
 });
 
-/* Water ripple / droplet wave effect */
+/* Peaceful ripple with throttling */
+let lastRipple = 0;
+
 window.addEventListener("mousemove", e => {
+    const now = Date.now();
+    if (now - lastRipple < 220) return; // 🔒 limits ripple frequency
+    lastRipple = now;
+
     const wave = document.createElement("div");
     wave.className = "wave";
     wave.style.left = `${e.clientX}px`;
     wave.style.top = `${e.clientY}px`;
     document.getElementById("wave-layer").appendChild(wave);
 
-    gsap.fromTo(wave,
-        { scale: 0.2, opacity: 0.8 },
+    gsap.fromTo(
+        wave,
+        { scale: 0.5, opacity: 0.6 },
         {
-            scale: 6,
+            scale: 8,
             opacity: 0,
-            duration: 1.2,
-            ease: "power2.out",
+            duration: 1.8,
+            ease: "power1.out",
             onComplete: () => wave.remove()
         }
     );
