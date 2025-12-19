@@ -1,185 +1,195 @@
-{% extends "base.html" %}
-
-{% block content %}
-<div class="container my-5 gsap-page">
-    <h1 class="text-center mb-4 gsap-title">📝 Question Paper Generator</h1>
-    
-    <!-- Upload Section -->
-    <div class="card mb-4 gsap-card">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">📁 Upload Question Bank</h5>
-        </div>
-        <div class="card-body">
-            <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data">
-                <div class="row align-items-end">
-                    <div class="col-md-8">
-                        <label for="file" class="form-label">Select CSV file</label>
-                        <input type="file" class="form-control" id="file" name="file" accept=".csv" required>
-                        <small class="text-muted">
-                            Format: id, subject, unit, topic, question_text, question_type, difficulty, marks
-                        </small>
-                    </div>
-                    <div class="col-md-4">
-                        <button type="submit" class="btn btn-primary w-100 gsap-btn">
-                            Upload
-                        </button>
-                    </div>
-                </div>
-            </form>
-
-            {% if stats %}
-            <div class="mt-3">
-                <strong>📊 Current Question Bank:</strong>
-                <ul class="list-unstyled ms-3">
-                    {% for subj, count in stats.items() %}
-                    <li>
-                        {{ subj }}: {{ count }} questions
-                        {% if marks_distribution[subj] %}
-                        <small class="text-muted">
-                            (
-                            {% for marks, cnt in marks_distribution[subj].items() %}
-                                {{ cnt }}×{{ marks }}m{% if not loop.last %}, {% endif %}
-                            {% endfor %}
-                            )
-                        </small>
-                        {% endif %}
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endif %}
-        </div>
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>{{ title or "Question Paper Generator" }}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { 
+      max-width: 1000px; 
+      margin: 0 auto; 
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      padding: 30px;
+    }
+    header { 
+      text-align: center;
+      margin-bottom: 30px; 
+      padding-bottom: 20px;
+      border-bottom: 3px solid #667eea;
+    }
+    h1 { 
+      color: #667eea; 
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+    h2, h3 { margin: 16px 0 12px 0; color: #333; }
+    label { 
+      display: inline-block; 
+      width: 160px; 
+      font-weight: 600;
+      color: #555;
+    }
+    input, select, button, textarea { 
+      padding: 10px; 
+      margin: 6px 0; 
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    .row { 
+      margin: 12px 0; 
+      display: flex; 
+      align-items: center; 
+      flex-wrap: wrap; 
+      gap: 12px; 
+    }
+    .card { 
+      border: 2px solid #e0e0e0; 
+      padding: 20px; 
+      border-radius: 10px; 
+      margin-bottom: 20px;
+      background: #fafafa;
+    }
+    .muted { 
+      color: #777; 
+      font-size: 0.9em; 
+      font-style: italic;
+    }
+    textarea { 
+      width: 100%; 
+      min-height: 120px; 
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+    }
+    .btn { 
+      padding: 12px 24px; 
+      cursor: pointer; 
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      transition: all 0.3s;
+    }
+    .btn-primary { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white; 
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    .btn-secondary { 
+      background: #6c757d; 
+      color: white; 
+    }
+    .btn-secondary:hover {
+      background: #545b62;
+    }
+    .paper-header { 
+      text-align: center; 
+      margin-bottom: 25px;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 8px;
+    }
+    .question { 
+      margin: 15px 0; 
+      padding: 12px;
+      background: white;
+      border-left: 4px solid #667eea;
+      border-radius: 4px;
+    }
+    .unit-title { 
+      margin-top: 20px; 
+      font-weight: bold; 
+      font-size: 1.3em;
+      color: #667eea;
+      padding: 10px;
+      background: #f0f0f0;
+      border-radius: 6px;
+    }
+    .alert {
+      padding: 12px 20px;
+      margin: 15px 0;
+      border-radius: 6px;
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .stat-box {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .stat-box h3 {
+      color: white;
+      font-size: 2em;
+      margin: 10px 0;
+    }
+    .stat-box p {
+      color: rgba(255,255,255,0.9);
+      font-size: 0.9em;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background: #667eea;
+      color: white;
+      font-weight: 600;
+    }
+    tr:hover {
+      background: #f5f5f5;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>📝 Question Paper Generator</h1>
+    <div class="muted">
+      Intelligent question paper generation with exact marks matching
     </div>
+  </header>
 
-    <!-- Generate Section -->
-    <div class="card gsap-card">
-        <div class="card-header bg-success text-white">
-            <h5 class="mb-0">⚙️ Configure Question Paper</h5>
-        </div>
-        <div class="card-body">
-            <form action="{{ url_for('generate_paper') }}" method="post">
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Subject *</label>
-                        <select class="form-select" name="subject" required>
-                            {% for subj in subjects %}
-                            <option value="{{ subj }}">{{ subj }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="alert">
+        {% for m in messages %}
+          <div>{{ m }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
 
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Paper Title</label>
-                        <input type="text" class="form-control" name="paper_title"
-                               value="Question Paper">
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Duration (minutes)</label>
-                        <input type="number" class="form-control" name="duration" value="90">
-                    </div>
-                </div>
-
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <h6 class="text-success">📋 Question Distribution</h6>
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">4 Marks Questions</label>
-                        <input type="number" class="form-control" name="marks_4_count" value="5">
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">6 Marks Questions</label>
-                        <input type="number" class="form-control" name="marks_6_count" value="5">
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">10 Marks Questions</label>
-                        <input type="number" class="form-control" name="marks_10_count" value="1">
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Instructions</label>
-                    <textarea class="form-control" name="instructions" rows="3"></textarea>
-                </div>
-
-                <div class="d-grid">
-                    <button type="submit" class="btn btn-success btn-lg gsap-btn">
-                        🎯 Generate Question Paper
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+  {% block content %}{% endblock %}
 </div>
-
-<!-- Flash Messages -->
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index:11">
-    {% for message in messages %}
-    <div class="toast show gsap-toast">
-        <div class="toast-body">{{ message }}</div>
-    </div>
-    {% endfor %}
-</div>
-{% endif %}
-{% endwith %}
-
-<!-- GSAP -->
-<script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
-
-<script>
-/* Page load */
-gsap.from(".gsap-page", {
-    opacity: 0,
-    y: 30,
-    duration: 0.7,
-    ease: "power2.out"
-});
-
-/* Cards flip-in */
-gsap.from(".gsap-card", {
-    rotateY: 15,
-    opacity: 0,
-    y: 40,
-    duration: 0.8,
-    stagger: 0.2,
-    transformOrigin: "center",
-    ease: "power3.out"
-});
-
-/* Hover 3D flip */
-document.querySelectorAll(".gsap-card").forEach(card => {
-    card.addEventListener("mouseenter", () => {
-        gsap.to(card, { rotateY: 3, scale: 1.02, duration: 0.3 });
-    });
-    card.addEventListener("mouseleave", () => {
-        gsap.to(card, { rotateY: 0, scale: 1, duration: 0.3 });
-    });
-});
-
-/* Button interaction */
-document.querySelectorAll(".gsap-btn").forEach(btn => {
-    btn.addEventListener("mousedown", () =>
-        gsap.to(btn, { scale: 0.96, duration: 0.1 })
-    );
-    btn.addEventListener("mouseup", () =>
-        gsap.to(btn, { scale: 1, duration: 0.1 })
-    );
-});
-
-/* Toast animation */
-gsap.from(".gsap-toast", {
-    x: 100,
-    opacity: 0,
-    duration: 0.4,
-    stagger: 0.1,
-    ease: "power2.out"
-});
-</script>
-
-{% endblock %}
+</body>
+</html>
