@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff - Mark Attendance</title>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* BODY */
+        body {
+            font-family: Arial, sans-serif;
+            background: #ffffff;
+            padding: 20px;
+        }
+
+        /* WAVE LAYER */
+        #wave-layer {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .wave {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid rgba(40, 167, 69, 0.35);
+            box-shadow: 0 0 20px rgba(56, 239, 125, 0.35);
+            transform: translate(-50%, -50%);
+        }
+
+        /* CONTAINER */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            background: #f4fdf9;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        }
+
+        h1 { color: #28a745; margin-bottom: 30px; }
+
+        .form-group { margin-bottom: 20px; }
+
+        label { display: block; margin-bottom: 8px; font-weight: bold; }
+
+        input, select { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #dff3ec; 
+            border-radius: 4px; 
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #28a745;
+        }
+
+        button {
+            background: linear-gradient(135deg, #28a745, #38ef7d);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        button:hover { opacity: 0.95; }
+
+        .student-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: #ffffff;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #28a745;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            background: #d4edda;
+            color: #155724;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- WAVE EFFECT LAYER -->
+<div id="wave-layer"></div>
+
+<div class="container">
+    <h1>📝 Staff - Mark Attendance</h1>
+
+    <div class="form-group">
+        <label>Select Class:</label>
+        <select id="class_id">
+            <option value="">-- Select Class --</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Subject Name:</label>
+        <input type="text" id="subject_name" placeholder="e.g., Mathematics">
+    </div>
+
+    <div class="form-group">
+        <label>Period Number:</label>
+        <input type="number" id="period_number" placeholder="1, 2, 3..." min="1">
+    </div>
+
+    <div class="form-group">
+        <label>Date:</label>
+        <input type="date" id="period_date">
+    </div>
+
+    <button onclick="loadStudents()">Load Students</button>
+
+    <div id="students_list" style="margin-top: 30px;"></div>
+
+    <button onclick="submitAttendance()" style="width: 100%; margin-top: 20px;">
+        Submit Attendance
+    </button>
+
+    <div id="result"></div>
+</div>
+
+<!-- ORIGINAL SCRIPT (UNCHANGED) -->
+<script>
+const API_URL = 'http://localhost:5000/api';
+let currentPeriodId = null;
+
+document.getElementById('period_date').valueAsDate = new Date();
+
+async function loadClasses() {
+    const response = await fetch(`${API_URL}/classes`);
+    const classes = await response.json();
+    const select = document.getElementById('class_id');
+    classes.forEach(c => {
+        select.innerHTML += `<option value="${c.class_id}">${c.class_name} - ${c.department}</option>`;
+    });
+}
+
+async function loadStudents() {
+    const classId = class_id.value;
+    const subjectName = subject_name.value;
+    const periodNumber = period_number.value;
+    const periodDate = period_date.value;
+
+    if (!classId || !subjectName || !periodNumber || !periodDate) {
+        alert('Please fill all fields!');
+        return;
+    }
+
+    const periodResponse = await fetch(`${API_URL}/periods`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            class_id: parseInt(classId),
+            subject_name: subjectName,
+            period_number: parseInt(periodNumber),
+            period_date: periodDate
+        })
+    });
+
+    const periodData = await periodResponse.json();
+    currentPeriodId = periodData.period_id;
+
+    const studentsResponse = await fetch(`${API_URL}/students?class_id=${classId}`);
+    const students = await studentsResponse.json();
+
+    let html = '<h2>Mark Attendance:</h2>';
+    students.forEach(student => {
+        html += `
+            <div class="student-item">
+                <span><strong>${student.reg_no}</strong> - ${student.student_name}</span>
+                <label>
+                    <input type="checkbox" class="attendance-checkbox"
+                           data-regno="${student.reg_no}" checked>
+                    Present
+                </label>
+            </div>
+        `;
+    });
+
+    students_list.innerHTML = html;
+}
+
+async function submitAttendance() {
+    if (!currentPeriodId) {
+        alert('Please load students first!');
+        return;
+    }
+
+    const attendance = [];
+    document.querySelectorAll('.attendance-checkbox').forEach(cb => {
+        attendance.push({
+            reg_no: cb.dataset.regno,
+            is_present: cb.checked ? 1 : 0
+        });
+    });
+
+    const response = await fetch(`${API_URL}/attendance`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            period_id: currentPeriodId,
+            attendance
+        })
+    });
+
+    const result = await response.json();
+    document.getElementById('result').innerHTML =
+        `<div class="result">✅ ${result.message}</div>`;
+}
+
+loadClasses();
+</script>
+
+<!-- GSAP -->
+<script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
+
+<script>
+gsap.from(".container", {
+    y: 40,
+    opacity: 0,
+    duration: 0.6,
+    ease: "power2.out"
+});
+
+let lastRipple = 0;
+window.addEventListener("mousemove", e => {
+    const now = Date.now();
+    if (now - lastRipple < 220) return;
+    lastRipple = now;
+
+    const wave = document.createElement("div");
+    wave.className = "wave";
+    wave.style.left = `${e.clientX}px`;
+    wave.style.top = `${e.clientY}px`;
+    document.getElementById("wave-layer").appendChild(wave);
+
+    gsap.fromTo(
+        wave,
+        { scale: 0.5, opacity: 0.6 },
+        {
+            scale: 8,
+            opacity: 0,
+            duration: 1.8,
+            ease: "power1.out",
+            onComplete: () => wave.remove()
+        }
+    );
+});
+</script>
+
+</body>
+</html>
