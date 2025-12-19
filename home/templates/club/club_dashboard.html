@@ -1,0 +1,494 @@
+{# templates/club/club_dashboard.html #}
+{% extends "base.html" %}
+{% block title %}Club Coordinator Dashboard — Codex{% endblock %}
+
+{% block sidebar %}
+  <h3>Club Menu</h3>
+  <a href="{{ url_for('club_home') }}" class="active"><i class="fas fa-home"></i> <span>Overview</span></a>
+{% endblock %}
+
+{% block content %}
+  <style>
+    /* DASHBOARD HEADER */
+    .dashboard-header {
+      background: linear-gradient(135deg, rgba(224, 251, 252, 0.15), rgba(224, 251, 252, 0.05));
+      padding: 32px;
+      border-radius: 20px;
+      margin-bottom: 32px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      animation: slideInDown 0.6s ease-out;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @keyframes slideInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .dashboard-header::before {
+      content: '🎉';
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 4rem;
+      opacity: 0.1;
+      animation: rotate 20s linear infinite;
+    }
+
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .dashboard-header h2 {
+      margin: 0 0 16px 0;
+      color: #E0FBFC;
+      font-size: 2.2rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .dashboard-header h2::before {
+      content: '🎯';
+      font-size: 2.5rem;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+    }
+
+    .welcome-text {
+      color: #E0FBFC;
+      font-size: 1.2rem;
+      opacity: 0.95;
+      font-weight: 500;
+      margin: 0;
+    }
+
+    .user-name {
+      font-weight: 700;
+      color: #E0FBFC;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    /* QUICK STATS GRID */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, rgba(224, 251, 252, 0.15), rgba(224, 251, 252, 0.08));
+      padding: 28px;
+      border-radius: 18px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.2s; }
+    .stat-card:nth-child(3) { animation-delay: 0.3s; }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(224, 251, 252, 0.2) 0%, transparent 70%);
+      transition: all 0.5s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-10px) scale(1.03);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+      border-color: rgba(224, 251, 252, 0.5);
+    }
+
+    .stat-card:hover::before {
+      top: -25%;
+      right: -25%;
+      width: 250px;
+      height: 250px;
+    }
+
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      background: rgba(224, 251, 252, 0.2);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      margin-bottom: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover .stat-icon {
+      transform: scale(1.15) rotate(5deg);
+      background: rgba(224, 251, 252, 0.3);
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: #E0FBFC;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: #E0FBFC;
+      position: relative;
+      z-index: 1;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .stat-trend {
+      font-size: 0.85rem;
+      color: #E0FBFC;
+      opacity: 0.7;
+      margin-top: 8px;
+    }
+
+    /* FEATURES GRID */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .feature-card {
+      background: rgba(224, 251, 252, 0.08);
+      padding: 32px;
+      border-radius: 18px;
+      border: 2px solid rgba(224, 251, 252, 0.2);
+      transition: all 0.4s ease;
+      animation: fadeIn 0.8s ease-out;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .feature-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+      border-color: rgba(224, 251, 252, 0.4);
+    }
+
+    .feature-icon {
+      width: 70px;
+      height: 70px;
+      background: linear-gradient(135deg, rgba(224, 251, 252, 0.2), rgba(224, 251, 252, 0.1));
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .feature-card:hover .feature-icon {
+      transform: scale(1.1) rotate(-5deg);
+    }
+
+    .feature-title {
+      color: #E0FBFC;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin: 0 0 12px 0;
+    }
+
+    .feature-description {
+      color: #E0FBFC;
+      opacity: 0.9;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    /* COMING SOON BADGE */
+    .coming-soon {
+      display: inline-block;
+      background: rgba(224, 251, 252, 0.2);
+      color: #E0FBFC;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 12px;
+      border: 1px solid rgba(224, 251, 252, 0.3);
+      animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    /* EMPTY STATE */
+    .empty-state {
+      background: rgba(224, 251, 252, 0.08);
+      padding: 60px 40px;
+      border-radius: 20px;
+      border: 2px dashed rgba(224, 251, 252, 0.3);
+      text-align: center;
+      animation: fadeIn 1s ease-out;
+    }
+
+    .empty-state-icon {
+      font-size: 5rem;
+      color: #E0FBFC;
+      opacity: 0.6;
+      margin-bottom: 24px;
+      display: inline-block;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+
+    .empty-state-title {
+      color: #E0FBFC;
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin: 0 0 12px 0;
+    }
+
+    .empty-state-text {
+      color: #E0FBFC;
+      opacity: 0.8;
+      font-size: 1.1rem;
+      line-height: 1.6;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* ACTION BUTTON */
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #E0FBFC 0%, #b8e9eb 100%);
+      border: none;
+      border-radius: 12px;
+      color: #06070E;
+      font-weight: 700;
+      font-size: 1.05rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 20px rgba(224, 251, 252, 0.3);
+      margin-top: 24px;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .action-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    .action-btn:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(224, 251, 252, 0.5);
+      background: linear-gradient(135deg, #ffffff 0%, #E0FBFC 100%);
+    }
+
+    .action-btn i,
+    .action-btn span {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .dashboard-header h2 {
+        font-size: 1.8rem;
+      }
+
+      .empty-state {
+        padding: 40px 20px;
+      }
+    }
+  </style>
+
+  <div class="dashboard-header">
+    <h2>Club Coordinator Dashboard</h2>
+    <p class="welcome-text">Welcome, <span class="user-name">{{ current_user.full_name or current_user.reg_no }}</span>! 👋</p>
+  </div>
+
+  <!-- Quick Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">📅</div>
+      <div class="stat-label">Upcoming Events</div>
+      <div class="stat-value">0</div>
+      <div class="stat-trend">No events scheduled</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">👥</div>
+      <div class="stat-label">Club Members</div>
+      <div class="stat-value">0</div>
+      <div class="stat-trend">Members will appear here</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-label">Pending Approvals</div>
+      <div class="stat-value">0</div>
+      <div class="stat-trend">All caught up!</div>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🎪</div>
+      <h3 class="feature-title">Club Events</h3>
+      <p class="feature-description">
+        Create, manage, and track all your club events. Schedule meetings, workshops, and special activities for your members.
+      </p>
+      <span class="coming-soon">Coming Soon</span>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">📋</div>
+      <h3 class="feature-title">Member Management</h3>
+      <p class="feature-description">
+        View and manage your club member list. Track attendance, roles, and member contributions to club activities.
+      </p>
+      <span class="coming-soon">Coming Soon</span>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">✅</div>
+      <h3 class="feature-title">Approvals</h3>
+      <p class="feature-description">
+        Review and approve membership requests, event proposals, and resource allocations for your club.
+      </p>
+      <span class="coming-soon">Coming Soon</span>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state">
+    <div class="empty-state-icon">🚀</div>
+    <h3 class="empty-state-title">Your Club Dashboard is Ready!</h3>
+    <p class="empty-state-text">
+      Club events, member lists, and approvals will appear here once they are configured. 
+      Start building your vibrant club community today!
+    </p>
+    <a href="#" class="action-btn">
+      <i class="fas fa-plus-circle"></i>
+      <span>Get Started</span>
+    </a>
+  </div>
+
+  <script>
+    // Animate stat values on load
+    document.addEventListener('DOMContentLoaded', function() {
+      const statCards = document.querySelectorAll('.stat-card');
+      
+      statCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+      });
+
+      // Add sparkle effect on hover
+      statCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+          const sparkle = document.createElement('div');
+          sparkle.style.position = 'absolute';
+          sparkle.style.top = Math.random() * 100 + '%';
+          sparkle.style.left = Math.random() * 100 + '%';
+          sparkle.style.width = '4px';
+          sparkle.style.height = '4px';
+          sparkle.style.background = '#E0FBFC';
+          sparkle.style.borderRadius = '50%';
+          sparkle.style.animation = 'sparkle 1s ease-out forwards';
+          sparkle.style.pointerEvents = 'none';
+          this.appendChild(sparkle);
+          
+          setTimeout(() => sparkle.remove(), 1000);
+        });
+      });
+    });
+
+    // Add CSS for sparkle animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes sparkle {
+        0% { opacity: 0; transform: scale(0); }
+        50% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(0); }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+{% endblock %}
