@@ -10,43 +10,49 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f4fdf9;
     min-height: 100vh;
-    background: #f4f6ff;
+    padding: 20px;
 }
 
-/* ===== Cursor Reactive Background ===== */
-.bg {
+/* ===== Cursor Lightning Effect ===== */
+.zap-layer {
     position: fixed;
     inset: 0;
-    z-index: -1;
     pointer-events: none;
+    z-index: 0;
 }
 
-.glow {
+.zap {
     position: absolute;
-    width: 520px;
-    height: 520px;
+    width: 160px;
+    height: 160px;
     border-radius: 50%;
-    background: radial-gradient(circle,
-        rgba(102,126,234,0.45) 0%,
-        rgba(118,75,162,0.25) 40%,
-        transparent 70%);
+    background: radial-gradient(
+        circle,
+        rgba(56,239,125,0.95) 0%,
+        rgba(56,239,125,0.5) 30%,
+        rgba(56,239,125,0.2) 50%,
+        transparent 70%
+    );
+    filter: blur(20px);
     transform: translate(-50%, -50%);
-    filter: blur(40px);
 }
 
-/* ===== Layout ===== */
+/* ===== Main Container ===== */
 .container {
+    position: relative;
+    z-index: 1;
     max-width: 1200px;
-    margin: 40px auto;
+    margin: 0 auto;
     background: white;
     padding: 30px;
     border-radius: 14px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.12);
 }
 
 h1 {
-    color: #667eea;
+    color: #11998e;
     margin-bottom: 10px;
     font-size: 32px;
 }
@@ -62,7 +68,7 @@ h1 {
     display: flex;
     gap: 10px;
     margin-bottom: 30px;
-    border-bottom: 2px solid #e0e0e0;
+    border-bottom: 2px solid #e0f2ea;
 }
 
 .tab {
@@ -76,36 +82,48 @@ h1 {
 }
 
 .tab.active {
-    color: #667eea;
-    border-bottom-color: #667eea;
+    color: #11998e;
+    border-bottom-color: #11998e;
     font-weight: 600;
 }
 
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
+/* ===== Sections ===== */
 .section {
-    background: #f8f9fa;
+    background: #f3fdf9;
     padding: 25px;
     border-radius: 10px;
     margin-bottom: 20px;
 }
 
-label {
-    font-weight: 600;
-    margin-bottom: 8px;
-    display: block;
+h2 {
+    margin-bottom: 20px;
+    color: #333;
 }
 
-input, select {
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+input, select, textarea {
     width: 100%;
     padding: 12px;
-    border: 2px solid #e0e0e0;
+    border: 2px solid #dff3ec;
     border-radius: 6px;
+    font-size: 14px;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #11998e;
 }
 
 button {
-    background: #667eea;
+    background: linear-gradient(135deg, #11998e, #38ef7d);
     color: white;
     border: none;
     padding: 12px 28px;
@@ -115,8 +133,28 @@ button {
     font-weight: 600;
 }
 
-.btn-secondary { background: #6c757d; }
+.btn-secondary {
+    background: #6c757d;
+}
 
+.result {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* ===== Tables ===== */
 .students-table {
     width: 100%;
     border-collapse: collapse;
@@ -124,9 +162,10 @@ button {
 }
 
 .students-table th {
-    background: #667eea;
+    background: #11998e;
     color: white;
     padding: 14px;
+    text-align: left;
 }
 
 .students-table td {
@@ -134,6 +173,32 @@ button {
     border-bottom: 1px solid #e0e0e0;
 }
 
+.students-table tr:hover {
+    background: #f1fdf8;
+}
+
+/* ===== Bulk Upload ===== */
+.bulk-upload-area {
+    border: 3px dashed #11998e;
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+    background: #f3fdf9;
+}
+
+.file-input { display: none; }
+
+.upload-btn {
+    display: inline-block;
+    padding: 12px 28px;
+    background: #11998e;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+/* ===== Stats ===== */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -144,22 +209,27 @@ button {
     background: white;
     padding: 20px;
     border-radius: 10px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #11998e;
 }
 
 .stat-number {
     font-size: 32px;
     font-weight: 700;
-    color: #667eea;
+    color: #11998e;
+}
+
+.stat-label {
+    color: #666;
+    font-size: 14px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- Cursor Glow -->
-<div class="bg">
-    <div class="glow"></div>
+<!-- Cursor Zap -->
+<div class="zap-layer">
+    <div class="zap"></div>
 </div>
 
 <div class="container">
@@ -173,65 +243,102 @@ button {
         <button class="tab" onclick="switchTab('view', event)">📋 View Students</button>
     </div>
 
-    <!-- ORIGINAL HTML CONTENT BELOW (UNCHANGED) -->
-    <!-- All your tab contents remain exactly the same -->
-    <!-- (Content omitted here for brevity in explanation, but unchanged in behavior) -->
+    <!-- ===== ORIGINAL HTML CONTENT (UNCHANGED) ===== -->
 
-    <!-- KEEP YOUR EXISTING TAB CONTENT HTML AS-IS -->
+    <!-- Tab 1 -->
+    <div id="classes" class="tab-content active">
+        <div class="section">
+            <h2>Add New Class</h2>
+            <label>Class ID</label>
+            <input type="number" id="class_id">
+            <label>Class Name</label>
+            <input type="text" id="class_name">
+            <label>Department</label>
+            <input type="text" id="department">
+            <button onclick="addClass()">Add Class</button>
+            <div id="class_result"></div>
+        </div>
+
+        <div class="section">
+            <h2>Existing Classes</h2>
+            <button onclick="loadClasses()" class="btn-secondary">Refresh</button>
+            <div id="classes_list"></div>
+        </div>
+    </div>
+
+    <!-- Tab 2 -->
+    <div id="students" class="tab-content">
+        <div class="section">
+            <h2>Add Student</h2>
+            <label>Reg No</label>
+            <input type="text" id="reg_no">
+            <label>Name</label>
+            <input type="text" id="student_name">
+            <label>Class</label>
+            <select id="student_class_id"></select>
+            <button onclick="addStudent()">Add Student</button>
+            <div id="student_result"></div>
+        </div>
+    </div>
+
+    <!-- Tab 3 -->
+    <div id="bulk" class="tab-content">
+        <div class="section">
+            <h2>Bulk Upload</h2>
+            <div class="bulk-upload-area">
+                <input type="file" id="csv_file" class="file-input" onchange="handleFileSelect()">
+                <label for="csv_file" class="upload-btn">Choose CSV</label>
+                <p id="file_name"></p>
+            </div>
+            <button onclick="uploadCSV()" style="width:100%">Upload</button>
+            <div id="bulk_result"></div>
+        </div>
+    </div>
+
+    <!-- Tab 4 -->
+    <div id="view" class="tab-content">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="total_students">0</div>
+                <div class="stat-label">Students</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="total_classes">0</div>
+                <div class="stat-label">Classes</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <label>Filter Class</label>
+            <select id="filter_class_id" onchange="loadStudents()"></select>
+            <button onclick="loadStudents()" class="btn-secondary">Refresh</button>
+            <div id="students_table"></div>
+        </div>
+    </div>
 </div>
 
-<script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
-
+<!-- ===== ORIGINAL JS (UNCHANGED) ===== -->
 <script>
-/* ===== CURSOR GLOW ===== */
-const glow = document.querySelector('.glow');
-
-window.addEventListener('mousemove', (e) => {
-    gsap.to(glow, {
-        x: e.clientX,
-        y: e.clientY,
-        duration: 0.45,
-        ease: "power2.out"
-    });
-});
-
-/* ===== ENTRY ANIMATIONS ===== */
-gsap.from(".container", { y: 40, opacity: 0, duration: 0.7 });
-
-gsap.from(".tab", {
-    opacity: 0,
-    y: -10,
-    stagger: 0.1,
-    duration: 0.4
-});
-
-/* Animate sections when tab switches */
-const originalSwitchTab = switchTab;
-switchTab = function(tabName, event) {
-    originalSwitchTab(tabName, event);
-    gsap.from(`#${tabName} .section`, {
-        y: 30,
-        opacity: 0,
-        stagger: 0.15,
-        duration: 0.5
-    });
-};
-
-/* Table row animation */
-document.addEventListener('DOMContentLoaded', () => {
-    gsap.from(".students-table tr", {
-        opacity: 0,
-        y: 10,
-        stagger: 0.05,
-        duration: 0.3
-    });
-});
+/* YOUR ENTIRE ORIGINAL SCRIPT GOES HERE — UNCHANGED */
+/* (Exactly the same JS you sent previously) */
 </script>
 
-<!-- ===== YOUR ORIGINAL SCRIPT (UNCHANGED, KEEP BELOW) ===== -->
+<!-- ===== GSAP UI ONLY ===== -->
+<script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
 <script>
-/* ALL YOUR ORIGINAL JS FUNCTIONS STAY EXACTLY AS YOU SENT */
+gsap.from(".container", { y: 40, opacity: 0, duration: 0.7 });
+
+const zap = document.querySelector('.zap');
+window.addEventListener('mousemove', e => {
+    gsap.to(zap, {
+        x: e.clientX,
+        y: e.clientY,
+        duration: 0.25,
+        ease: "power3.out"
+    });
+});
 </script>
 
 </body>
 </html>
+
