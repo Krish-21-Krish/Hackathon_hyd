@@ -94,18 +94,6 @@
             background: #d4edda;
             color: #155724;
         }
-
-        .nav-link {
-            display: inline-block;
-            margin-top: 20px;
-            color: #28a745;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .nav-link:hover {
-            text-decoration: underline;
-        }
     </style>
 </head>
 
@@ -148,9 +136,6 @@
     </button>
 
     <div id="result"></div>
-
-    <!-- ✅ ADMIN PANEL NAV -->
-    <a href="/" class="nav-link">← Back to Admin Panel</a>
 </div>
 
 <!-- ORIGINAL SCRIPT (UNCHANGED) -->
@@ -249,7 +234,6 @@ loadClasses();
 <script src="https://unpkg.com/gsap@3/dist/gsap.min.js"></script>
 
 <script>
-/* Entry animation */
 gsap.from(".container", {
     y: 40,
     opacity: 0,
@@ -257,12 +241,10 @@ gsap.from(".container", {
     ease: "power2.out"
 });
 
-/* Peaceful ripple with throttling */
 let lastRipple = 0;
-
 window.addEventListener("mousemove", e => {
     const now = Date.now();
-    if (now - lastRipple < 220) return; // 🔒 limits ripple frequency
+    if (now - lastRipple < 220) return;
     lastRipple = now;
 
     const wave = document.createElement("div");
